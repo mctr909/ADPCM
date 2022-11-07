@@ -27,9 +27,9 @@ namespace ADPCM {
         Point mPos = new Point();
 
         public bool IsDrag { get { return mDrag; } }
-        public int MajorTickFreq = 100;
-        public int MinorTickFreq = 25;
-        public long MaxValue = 1000;
+        public long MajorTickFreq = 50;
+        public long MinorTickFreq = 5;
+        public long MaxValue = 500;
         public long MinValue = 0;
         public long Value = 0;
 
@@ -90,25 +90,16 @@ namespace ADPCM {
             var tickWidth = (double)trkWidth / (MaxValue - MinValue);
 
             long posX;
-            var value = (int)((mPos.X - KNOB_WIDTH) / tickWidth + 0.5);
+            var value = (long)((mPos.X - KNOB_WIDTH) / tickWidth + 0.5);
             if (mDrag) {
-                posX = KNOB_WIDTH + value * trkWidth / (MaxValue - MinValue);
                 if (value < MinValue) {
-                    Value = MinValue;
+                    value = MinValue;
                 } else if (MaxValue < value) {
-                    Value = MaxValue;
-                } else {
-                    Value = value;
+                    value = MaxValue;
                 }
-            } else {
-                posX = KNOB_WIDTH + Value * trkWidth / (MaxValue - MinValue);
+                Value = value;
             }
-            if (posX < KNOB_WIDTH) {
-                posX = KNOB_WIDTH;
-            }
-            if (trkWidth + KNOB_WIDTH < posX) {
-                posX = trkWidth + KNOB_WIDTH;
-            }
+            posX = KNOB_WIDTH + Value * trkWidth / (MaxValue - MinValue);
 
             for (long i = (MaxValue - MinValue) / MinorTickFreq; i >= 0; i--) {
                 var x = KNOB_WIDTH + (int)(i * tickWidth * MinorTickFreq);

@@ -4,42 +4,54 @@ using System.IO;
 
 namespace ADPCM {
     public partial class Form1 : Form {
+        string mFilePath = "";
+        FileStream mFs;
+
         public Form1() {
             InitializeComponent();
         }
 
         private void Form1_Load(object sender, EventArgs e) {
-            var fw = new FileStream("C:\\Users\\ris\\Desktop\\test.bin", FileMode.Create);
-            var fi = new FileStream("C:\\Users\\ris\\Desktop\\test.csv", FileMode.Create);
-            var sw = new StreamWriter(fi);
-            var enc = new VAG();
-            var dec = new VAG();
-            var wave = new short[28];
-            double count = 0.0;
-            for (int j=0; j<100; j++) {
-                for (int i = 0; i < VAG.PACKING_SAMPLES; i++) {
-                    //wave[i] = (short)(32000 * Math.Sin(2 * Math.PI * count));
-                    if (count < 0.5) {
-                        wave[i] = 32000;
-                    } else {
-                        wave[i] = -32000;
-                    }
-                    count += 560 / 44100.0;
-                    if (1 <= count) {
-                        count -= 1.0;
-                    }
-                }
-                enc.Enc(wave);
-                dec.Dec(enc.EncBuf);
-                fw.Write(enc.EncBuf, 0, enc.EncBuf.Length);
-                for (int i = 0; i < VAG.PACKING_SAMPLES; i++) {
-                    sw.WriteLine(dec.DecBuf[i]);
-                }
+
+        }
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
+            if (null != mFs) {
+                mFs.Close();
+                mFs.Dispose();
             }
-            fw.Close();
-            fw.Dispose();
-            fi.Close();
-            fi.Dispose();
+        }
+
+        private void btnOpen_Click(object sender, EventArgs e) {
+            openFileDialog1.ShowDialog();
+            var filePath = openFileDialog1.FileName;
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) {
+                return;
+            }
+            mFilePath = filePath;
+            Text = mFilePath;
+            if (null != mFs) {
+                mFs.Close();
+                mFs.Dispose();
+            }
+            mFs = new FileStream(mFilePath, FileMode.Open, FileAccess.Read);
+            var len = mFs.Length / 16;
+            trackbar1.Value = 0;
+            trackbar1.MaxValue = len;
+            trackbar1.MinorTickFreq = len / 80;
+            trackbar1.MajorTickFreq = trackbar1.MinorTickFreq * 10;
+        }
+
+        private void btnPlay_Click(object sender, EventArgs e) {
+            if (null == mFs) {
+                btnPlay.Text = "再生";
+                return;
+            }
+
+            if ("再生" == btnPlay.Text) {
+                btnPlay.Text = "停止";
+            } else {
+                btnPlay.Text = "再生";
+            }
         }
     }
 }
