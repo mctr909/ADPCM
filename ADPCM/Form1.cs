@@ -5,7 +5,7 @@ using System.IO;
 namespace ADPCM {
     public partial class Form1 : Form {
         string mFilePath = "";
-        FileStream mFs;
+        WaveOut mWave;
 
         public Form1() {
             InitializeComponent();
@@ -15,9 +15,8 @@ namespace ADPCM {
 
         }
         private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
-            if (null != mFs) {
-                mFs.Close();
-                mFs.Dispose();
+            if (null != mWave) {
+                mWave.Dispose();
             }
         }
 
@@ -29,12 +28,11 @@ namespace ADPCM {
             }
             mFilePath = filePath;
             Text = mFilePath;
-            if (null != mFs) {
-                mFs.Close();
-                mFs.Dispose();
+            if (null != mWave) {
+                mWave.Dispose();
             }
-            mFs = new FileStream(mFilePath, FileMode.Open, FileAccess.Read);
-            var len = mFs.Length / 16;
+            mWave = new WaveOut(mFilePath);
+            var len = mWave.FileSize / 16;
             trackbar1.Value = 0;
             trackbar1.MaxValue = len;
             trackbar1.MinorTickFreq = len / 80;
@@ -42,7 +40,7 @@ namespace ADPCM {
         }
 
         private void btnPlay_Click(object sender, EventArgs e) {
-            if (null == mFs) {
+            if (null == mWave) {
                 btnPlay.Text = "再生";
                 return;
             }
