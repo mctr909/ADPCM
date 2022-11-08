@@ -119,6 +119,9 @@ class VAG {
     public void Dec(byte[] vagData) {
         var shift = vagData[0] & 0xF;
         var predict = (vagData[0] & 0xF0) >> 4;
+        if (4 < predict) {
+            predict = 0;
+        }
         for (int i = 0, b = 2; i < PACKING_SAMPLES; i += 2, b++) {
             var in1 = (vagData[b] & 0x0F) << 12;
             if ((in1 & 0x8000) != 0) {

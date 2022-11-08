@@ -8,6 +8,7 @@ namespace ADPCM {
         static readonly Pen PKNOB = new Pen(Color.FromArgb(95, 31, 31, 31));
         static readonly Brush BSLIDER = new Pen(Color.FromArgb(95, 95, 95)).Brush;
         static readonly Pen PSLIDER = new Pen(Color.FromArgb(0, 0, 0));
+        static readonly Font ValueFont = new Font("Segoe UI", 11);
 
         static readonly int KNOB_WIDTH = 5;
         static readonly int KNOB_HEIGHT = 12;
@@ -117,6 +118,8 @@ namespace ADPCM {
             }
             mG.FillPolygon(BKNOB, mKnobPoly);
             mG.DrawPolygon(PKNOB, mKnobPoly);
+
+            mG.DrawString(Value.ToString() + "/" + MaxValue, ValueFont, Brushes.Black, 0, KNOB_HEIGHT * 2 + 2);
 
             pictureBox1.Image = pictureBox1.Image;
         }
