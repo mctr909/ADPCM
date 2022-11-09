@@ -37,9 +37,12 @@ namespace ADPCM {
             this.numSampleRate = new System.Windows.Forms.NumericUpDown();
             this.btnApply = new System.Windows.Forms.Button();
             this.trackbar1 = new ADPCM.Trackbar();
+            this.numPlayChannel = new System.Windows.Forms.NumericUpDown();
+            this.label4 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numChannels)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPackingSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numSampleRate)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPlayChannel)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOpen
@@ -185,11 +188,46 @@ namespace ADPCM {
             this.trackbar1.Size = new System.Drawing.Size(512, 43);
             this.trackbar1.TabIndex = 0;
             // 
+            // numPlayChannel
+            // 
+            this.numPlayChannel.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.numPlayChannel.Location = new System.Drawing.Point(433, 24);
+            this.numPlayChannel.Maximum = new decimal(new int[] {
+            16,
+            0,
+            0,
+            0});
+            this.numPlayChannel.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numPlayChannel.Name = "numPlayChannel";
+            this.numPlayChannel.Size = new System.Drawing.Size(61, 22);
+            this.numPlayChannel.TabIndex = 10;
+            this.numPlayChannel.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            this.numPlayChannel.ValueChanged += new System.EventHandler(this.numPlayChannel_ValueChanged);
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(431, 9);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(75, 12);
+            this.label4.TabIndex = 11;
+            this.label4.Text = "再生チャンネル";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(532, 127);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.numPlayChannel);
             this.Controls.Add(this.btnApply);
             this.Controls.Add(this.numSampleRate);
             this.Controls.Add(this.label3);
@@ -209,6 +247,7 @@ namespace ADPCM {
             ((System.ComponentModel.ISupportInitialize)(this.numChannels)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPackingSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numSampleRate)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPlayChannel)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -228,6 +267,8 @@ namespace ADPCM {
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.NumericUpDown numSampleRate;
         private System.Windows.Forms.Button btnApply;
+        private System.Windows.Forms.NumericUpDown numPlayChannel;
+        private System.Windows.Forms.Label label4;
     }
 }
 

@@ -11,6 +11,10 @@ namespace ADPCM {
         }
 
         private void Form1_Load(object sender, EventArgs e) {
+            numPlayChannel.Minimum = 0;
+            numPlayChannel.Value = 0;
+            numPlayChannel.Maximum = 0;
+            numPlayChannel.Enabled = false;
             timer1.Interval = 33;
             timer1.Enabled = true;
             timer1.Start();
@@ -40,7 +44,6 @@ namespace ADPCM {
                 btnPlay.Text = "再生";
                 return;
             }
-
             if ("再生" == btnPlay.Text) {
                 mWave.Start();
                 btnPlay.Text = "一時停止";
@@ -55,35 +58,52 @@ namespace ADPCM {
                 return;
             }
             if(trackbar1.IsDrag) {
-                var div = mWave.PackingSize * mWave.Channels;
-                var pos = trackbar1.Value * mWave.PackingSize;
-                mWave.Position = pos / div * div;
+                setPos();
             } else {
                 trackbar1.Value = mWave.Position / mWave.PackingSize;
             }
         }
 
         private void numChannels_ValueChanged(object sender, EventArgs e) {
+            numPlayChannel.Minimum = 0;
+            numPlayChannel.Value = 0;
+            if ((int)numChannels.Value < 3) {
+                numPlayChannel.Enabled = false;
+                numPlayChannel.Maximum = 0;
+            } else {
+                numPlayChannel.Enabled = true;
+                numPlayChannel.Maximum = numChannels.Value - 2;
+            }
             if (null == mWave) {
                 return;
             }
             mWave.Channels = (int)numChannels.Value;
-            var div = mWave.PackingSize * mWave.Channels;
-            var pos = mWave.Position;
-            mWave.Position = pos / div * div;
+            setPos();
+        }
+
+        private void numPlayChannel_ValueChanged(object sender, EventArgs e) {
+            if (null == mWave) {
+                return;
+            }
+            setPos();
         }
 
         private void btnApply_Click(object sender, EventArgs e) {
             if (string.IsNullOrEmpty(Text) || !File.Exists(Text)) {
                 return;
             }
-            var pos = mWave.Position;
             load();
             if ("一時停止" == btnPlay.Text) {
-                var div = mWave.PackingSize << 4;
-                mWave.Position = pos / div * div;
+                setPos();
                 mWave.Start();
             }
+        }
+
+        void setPos() {
+            var div = mWave.PackingSize << 4;
+            var pos = trackbar1.Value * mWave.PackingSize;
+            var ofs = (int)numPlayChannel.Value * mWave.PackingSize;
+            mWave.Position = pos / div * div + ofs;
         }
 
         void load() {
