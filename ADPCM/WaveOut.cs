@@ -23,7 +23,11 @@ namespace ADPCM {
         }
         public int PackingSize { get { return mPackingSize; } }
 
-        public WaveOut(string filePath, int sampleRate, int packingSize = 0x800) : base(sampleRate, 2, VAG.PACKING_SAMPLES * packingSize * 2 >> 4) {
+        public WaveOut(string filePath, int sampleRate, int packingSize = 0x800) : base(
+            sampleRate,
+            2,
+            (packingSize < 128 ? 128 : packingSize) * VAG.PACKING_SAMPLES * 2 >> 4
+        ) {
             mPackingSize = packingSize;
             mBuffL = new short[VAG.PACKING_SAMPLES * mPackingSize >> 4];
             mBuffR = new short[VAG.PACKING_SAMPLES * mPackingSize >> 4];

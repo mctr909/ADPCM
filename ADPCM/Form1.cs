@@ -4,7 +4,6 @@ using System.IO;
 
 namespace ADPCM {
     public partial class Form1 : Form {
-        string mFilePath = "";
         WaveOut mWave;
 
         public Form1() {
@@ -16,6 +15,7 @@ namespace ADPCM {
             timer1.Enabled = true;
             timer1.Start();
         }
+
         private void Form1_FormClosing(object sender, FormClosingEventArgs e) {
             if (null != mWave) {
                 mWave.Dispose();
@@ -28,27 +28,11 @@ namespace ADPCM {
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) {
                 return;
             }
-            mFilePath = filePath;
-            Text = mFilePath;
-            if (null != mWave) {
-                mWave.Dispose();
-            }
-            mWave = new WaveOut(mFilePath, (int)numSampleRate.Value, (int)numPackingSize.Value * 16);
-            mWave.Channels = (int)numChannels.Value;
-            var len = mWave.FileSize / mWave.PackingSize / 2;
-            var div = 100;
-            if (0 == len) {
-                len = 1;
-            }
-            if (len < div) {
-                div = 1;
-            }
-            trackbar1.Value = 0;
-            trackbar1.MaxValue = len;
-            trackbar1.MinorTickFreq = len / div;
-            trackbar1.MajorTickFreq = trackbar1.MinorTickFreq * 10;
-            mWave.Start();
+            Text = filePath;
+            load();
             btnPlay.Text = "一時停止";
+            trackbar1.Value = 0;
+            mWave.Start();
         }
 
         private void btnPlay_Click(object sender, EventArgs e) {
@@ -71,9 +55,11 @@ namespace ADPCM {
                 return;
             }
             if(trackbar1.IsDrag) {
-                mWave.Position = trackbar1.Value * mWave.PackingSize * 2;
+                var div = mWave.PackingSize * mWave.Channels;
+                var pos = trackbar1.Value * mWave.PackingSize;
+                mWave.Position = pos / div * div;
             } else {
-                trackbar1.Value = mWave.Position / mWave.PackingSize / 2;
+                trackbar1.Value = mWave.Position / mWave.PackingSize;
             }
         }
 
@@ -82,6 +68,41 @@ namespace ADPCM {
                 return;
             }
             mWave.Channels = (int)numChannels.Value;
+            var div = mWave.PackingSize * mWave.Channels;
+            var pos = mWave.Position;
+            mWave.Position = pos / div * div;
+        }
+
+        private void btnApply_Click(object sender, EventArgs e) {
+            if (string.IsNullOrEmpty(Text) || !File.Exists(Text)) {
+                return;
+            }
+            var pos = mWave.Position;
+            load();
+            if ("一時停止" == btnPlay.Text) {
+                var div = mWave.PackingSize << 4;
+                mWave.Position = pos / div * div;
+                mWave.Start();
+            }
+        }
+
+        void load() {
+            if (null != mWave) {
+                mWave.Dispose();
+            }
+            mWave = new WaveOut(Text, (int)numSampleRate.Value, (int)numPackingSize.Value << 4);
+            mWave.Channels = (int)numChannels.Value;
+            var len = mWave.FileSize / mWave.PackingSize;
+            var div = 100;
+            if (0 == len) {
+                len = 1;
+            }
+            if (len < div) {
+                div = 1;
+            }
+            trackbar1.MaxValue = len;
+            trackbar1.MinorTickFreq = len / div;
+            trackbar1.MajorTickFreq = trackbar1.MinorTickFreq * 10;
         }
     }
 }
