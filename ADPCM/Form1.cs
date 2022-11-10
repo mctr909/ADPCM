@@ -15,6 +15,8 @@ namespace ADPCM {
             numPlayChannel.Value = 0;
             numPlayChannel.Maximum = 0;
             numPlayChannel.Enabled = false;
+            listBox1.SelectionMode = SelectionMode.One;
+            listBox1.AllowDrop = true;
             timer1.Interval = 33;
             timer1.Enabled = true;
             timer1.Start();
@@ -26,23 +28,21 @@ namespace ADPCM {
             }
         }
 
-        private void btnOpen_Click(object sender, EventArgs e) {
-            openFileDialog1.ShowDialog();
-            var filePath = openFileDialog1.FileName;
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) {
-                return;
-            }
-            Text = filePath;
-            load();
-            btnPlay.Text = "一時停止";
-            trackbar1.Value = 0;
-            mWave.Start();
-        }
-
         private void btnPlay_Click(object sender, EventArgs e) {
             if (null == mWave) {
-                btnPlay.Text = "再生";
-                return;
+                if (0 == listBox1.Items.Count) {
+                    return;
+                }
+                if (listBox1.SelectedIndex < 0) {
+                    listBox1.SelectedIndex = 0;
+                }
+                var path = (string)listBox1.SelectedItem;
+                if (!File.Exists(path)) {
+                    return;
+                }
+                Text = path;
+                load();
+                trackbar1.Value = 0;
             }
             if ("再生" == btnPlay.Text) {
                 mWave.Start();
@@ -97,6 +97,49 @@ namespace ADPCM {
                 setPos();
                 mWave.Start();
             }
+        }
+
+        private void listBox1_MouseDown(object sender, MouseEventArgs e) {
+            if (MouseButtons.Right == e.Button) {
+                var itemIndex = listBox1.IndexFromPoint(e.X, e.Y);
+                if (itemIndex < 0) {
+                    return;
+                }
+                var itemText = (string)listBox1.Items[itemIndex];
+                var dde = listBox1.DoDragDrop(itemText, DragDropEffects.All);
+                if (DragDropEffects.Move == dde) {
+                    listBox1.Items.RemoveAt(itemIndex);
+                }
+            }
+        }
+
+        private void listBox1_DragEnter(object sender, DragEventArgs e) {
+            e.Effect = DragDropEffects.Move;
+        }
+
+        private void listBox1_DragDrop(object sender, DragEventArgs e) {
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) {
+                return;
+            }
+            foreach (var filePath in (string[])e.Data.GetData(DataFormats.FileDrop)) {
+                listBox1.Items.Add(filePath);
+            }
+        }
+
+        private void listBox1_SelectedIndexChanged(object sender, EventArgs e) {
+            var itemIndex = listBox1.SelectedIndex;
+            if (itemIndex < 0) {
+                return;
+            }
+            var filePath = (string)listBox1.Items[itemIndex];
+            if (!File.Exists(filePath)) {
+                return;
+            }
+            Text = filePath;
+            load();
+            btnPlay.Text = "一時停止";
+            trackbar1.Value = 0;
+            mWave.Start();
         }
 
         void setPos() {

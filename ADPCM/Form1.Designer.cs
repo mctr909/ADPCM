@@ -25,7 +25,6 @@ namespace ADPCM {
         /// </summary>
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
-            this.btnOpen = new System.Windows.Forms.Button();
             this.btnPlay = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
@@ -36,28 +35,19 @@ namespace ADPCM {
             this.label3 = new System.Windows.Forms.Label();
             this.numSampleRate = new System.Windows.Forms.NumericUpDown();
             this.btnApply = new System.Windows.Forms.Button();
-            this.trackbar1 = new ADPCM.Trackbar();
             this.numPlayChannel = new System.Windows.Forms.NumericUpDown();
             this.label4 = new System.Windows.Forms.Label();
+            this.listBox1 = new System.Windows.Forms.ListBox();
+            this.trackbar1 = new ADPCM.Trackbar();
             ((System.ComponentModel.ISupportInitialize)(this.numChannels)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPackingSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numSampleRate)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPlayChannel)).BeginInit();
             this.SuspendLayout();
             // 
-            // btnOpen
-            // 
-            this.btnOpen.Location = new System.Drawing.Point(12, 12);
-            this.btnOpen.Name = "btnOpen";
-            this.btnOpen.Size = new System.Drawing.Size(75, 23);
-            this.btnOpen.TabIndex = 1;
-            this.btnOpen.Text = "開く";
-            this.btnOpen.UseVisualStyleBackColor = true;
-            this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
-            // 
             // btnPlay
             // 
-            this.btnPlay.Location = new System.Drawing.Point(12, 41);
+            this.btnPlay.Location = new System.Drawing.Point(12, 24);
             this.btnPlay.Name = "btnPlay";
             this.btnPlay.Size = new System.Drawing.Size(75, 23);
             this.btnPlay.TabIndex = 2;
@@ -76,7 +66,7 @@ namespace ADPCM {
             // numChannels
             // 
             this.numChannels.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.numChannels.Location = new System.Drawing.Point(366, 24);
+            this.numChannels.Location = new System.Drawing.Point(381, 24);
             this.numChannels.Maximum = new decimal(new int[] {
             16,
             0,
@@ -100,7 +90,7 @@ namespace ADPCM {
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(364, 9);
+            this.label1.Location = new System.Drawing.Point(379, 9);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(63, 12);
             this.label1.TabIndex = 4;
@@ -180,18 +170,10 @@ namespace ADPCM {
             this.btnApply.UseVisualStyleBackColor = true;
             this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
             // 
-            // trackbar1
-            // 
-            this.trackbar1.BackColor = System.Drawing.Color.Transparent;
-            this.trackbar1.Location = new System.Drawing.Point(12, 72);
-            this.trackbar1.Name = "trackbar1";
-            this.trackbar1.Size = new System.Drawing.Size(512, 43);
-            this.trackbar1.TabIndex = 0;
-            // 
             // numPlayChannel
             // 
             this.numPlayChannel.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.numPlayChannel.Location = new System.Drawing.Point(433, 24);
+            this.numPlayChannel.Location = new System.Drawing.Point(448, 24);
             this.numPlayChannel.Maximum = new decimal(new int[] {
             16,
             0,
@@ -215,17 +197,41 @@ namespace ADPCM {
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(431, 9);
+            this.label4.Location = new System.Drawing.Point(446, 9);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(75, 12);
             this.label4.TabIndex = 11;
             this.label4.Text = "再生チャンネル";
             // 
+            // listBox1
+            // 
+            this.listBox1.Font = new System.Drawing.Font("ＭＳ Ｐゴシック", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.listBox1.FormattingEnabled = true;
+            this.listBox1.ItemHeight = 12;
+            this.listBox1.Location = new System.Drawing.Point(12, 108);
+            this.listBox1.Name = "listBox1";
+            this.listBox1.ScrollAlwaysVisible = true;
+            this.listBox1.Size = new System.Drawing.Size(508, 148);
+            this.listBox1.TabIndex = 12;
+            this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
+            this.listBox1.DragDrop += new System.Windows.Forms.DragEventHandler(this.listBox1_DragDrop);
+            this.listBox1.DragEnter += new System.Windows.Forms.DragEventHandler(this.listBox1_DragEnter);
+            this.listBox1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.listBox1_MouseDown);
+            // 
+            // trackbar1
+            // 
+            this.trackbar1.BackColor = System.Drawing.Color.Transparent;
+            this.trackbar1.Location = new System.Drawing.Point(12, 53);
+            this.trackbar1.Name = "trackbar1";
+            this.trackbar1.Size = new System.Drawing.Size(512, 43);
+            this.trackbar1.TabIndex = 0;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(532, 127);
+            this.ClientSize = new System.Drawing.Size(532, 268);
+            this.Controls.Add(this.listBox1);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.numPlayChannel);
             this.Controls.Add(this.btnApply);
@@ -236,7 +242,6 @@ namespace ADPCM {
             this.Controls.Add(this.label1);
             this.Controls.Add(this.numChannels);
             this.Controls.Add(this.btnPlay);
-            this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.trackbar1);
             this.Cursor = System.Windows.Forms.Cursors.SizeAll;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -256,7 +261,6 @@ namespace ADPCM {
         #endregion
 
         private Trackbar trackbar1;
-        private System.Windows.Forms.Button btnOpen;
         private System.Windows.Forms.Button btnPlay;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.Timer timer1;
@@ -269,6 +273,7 @@ namespace ADPCM {
         private System.Windows.Forms.Button btnApply;
         private System.Windows.Forms.NumericUpDown numPlayChannel;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.ListBox listBox1;
     }
 }
 
