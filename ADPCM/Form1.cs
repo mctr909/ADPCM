@@ -62,6 +62,19 @@ namespace ADPCM {
             } else {
                 trackbar1.Value = mWave.Position / mWave.PackingSize;
             }
+            if (mWave.FileSize <= mWave.Position) {
+                var itemIndex = listBox1.SelectedIndex;
+                if (itemIndex < 0) {
+                    mWave.Position = 0;
+                    btnPlay.Text = "再生";
+                    return;
+                }
+                if (listBox1.Items.Count <= itemIndex + 1) {
+                    listBox1.SelectedIndex = 0;
+                    return;
+                }
+                listBox1.SelectedIndex++;
+            }
         }
 
         private void numChannels_ValueChanged(object sender, EventArgs e) {

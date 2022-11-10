@@ -109,8 +109,8 @@ namespace ADPCM {
             for (int c = 2; c < Channels; c++) {
                 mFs.Position += mPackingSize;
             }
-            if (mFs.Length <= mFs.Position) {
-                mFs.Position = 0;
+            if (FileSize <= Position) {
+                mStopped = true;
             }
             mLoadSize = VAG.PACKING_SAMPLES * mPackingSize >> 4;
         }
