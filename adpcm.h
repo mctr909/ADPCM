@@ -1,32 +1,33 @@
 class VAG {
 public:
-	static const int SAMPLES = 63;
+	static const int SAMPLES = 64;
 	static const int PACKSIZE = 16;
 	static const int FILTER_INDEXES = 4;
 
 private:
 	const int DELTA_STEP[3] = {
-		3, 11, 11
+		3, 12, 12
 	};
 	const double KE[FILTER_INDEXES] = {
-		1.0 / 16.0,
-		5.0 / 16.0,
-		13.0 / 16.0,
-		15.0 / 16.0,
+		1.0 / 8.0,
+		3.0 / 4.0,
+		29.0 / 32.0,
+		31.0 / 32.0
 	};
 	const double KD[FILTER_INDEXES] = {
 		KE[0] / (1.0 - KE[0]),
-		KE[1] / (1.0 - KE[1]),
+		0.0,
 		0.0,
 		0.0
 	};
 
 private:
-	double m_filter_f = 0.0;
 	double m_delta = 4.0;
 	double m_predict = 0.0;
-	double m_df = 0.0;
-	double m_dr = 0.0;
+	double m_predict_d = 0.0;
+	double m_filter_f = 0.0;
+	double m_filter_df = 0.0;
+	double m_filter_dr = 0.0;
 	double m_err = 0.0;
 	double mp_code[FILTER_INDEXES][SAMPLES] = { 0 };
 
@@ -111,20 +112,16 @@ public:
 				p_output[b] |= static_cast<unsigned char>(mp_code[f_index][k] + 2) << (2 * j);
 			}
 		}
-		p_output[PACKSIZE-1] |= static_cast<unsigned char>(f_index) << 6;
 	}
 
 	void decode(short *p_output, unsigned char *p_input) {
-		int f_index = p_input[PACKSIZE-1] >> 6;
 		for (int i=0, b=0; i<SAMPLES; i+=4, b++) {
 			for (int j=0, k=i; j<4 && k < SAMPLES; j++, k++) {
 				/*** デコード ***/
 				int code = ((p_input[b] >> (2 * j)) & 3) - 2;
 				update(code, &m_delta, &m_predict);
-				/*** 逆フィルタ ***/
-				double output = m_predict + (m_predict - m_predict_d) * KD[f_index];
-				m_predict_d = m_predict;
 				/*** 出力 ***/
+				double output = m_predict;
 				if (output < -32768) {
 					output = -32768;
 				}
