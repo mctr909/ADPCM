@@ -120,11 +120,11 @@ public abstract class WaveLib : IDisposable {
     private int mBufferIndex;
     private bool mIsPlay;
 
-    public int SampleRate { get; }
-    public int Channels { get; }
-    public int BufferSize { get; }
+    public int SampleRate { get; private set; }
+    public int Channels { get; private set; }
+    public int BufferSize { get; private set; }
 
-    public WaveLib(int sampleRate = 44100, int channels = 2, int bufferSize = 4096, int bufferCount = 4, bool rec = false) {
+    protected void Setup(int sampleRate = 44100, int channels = 2, int bufferSize = 4096, int bufferCount = 4, bool rec = false) {
         SampleRate = sampleRate;
         Channels = channels;
         BufferSize = bufferSize;

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.Remoting.Channels;
 using System.Threading;
 
 namespace ADPCM {
@@ -8,6 +7,8 @@ namespace ADPCM {
         FileStream mFs;
         VAG mAdpcmL = new VAG();
         VAG mAdpcmR = new VAG();
+        RiffWave mWave;
+        byte[] mRaw;
         short[] mBuffL;
         short[] mBuffR;
         int mPackingSize;
@@ -15,23 +16,59 @@ namespace ADPCM {
         bool mStopped = true;
         int mLoadSize = 0;
 
+        delegate void Writer();
+        Writer mWriter;
+
         public int Channels = 2;
-        public long FileSize { get { return mFs.Length; } }
+        public long FileSize {
+            get {
+                if (null == mFs) {
+                    return mWave.Length;
+                } else {
+                    return mFs.Length;
+                }
+            }
+        }
         public long Position {
-            get { return mFs.Position; }
-            set { mFs.Position = value; }
+            get {
+                if (null == mFs) {
+                    return mWave.Position;
+                } else {
+                    return mFs.Position;
+                }
+            }
+            set {
+                if (null == mFs) {
+                    mWave.Position = value;
+                } else {
+                    mFs.Position = value;
+                }
+            }
         }
         public int PackingSize { get { return mPackingSize; } }
 
-        public WaveOut(string filePath, int sampleRate, int packingSize = 0x800) : base(
-            sampleRate,
-            2,
-            (packingSize < 128 ? 128 : packingSize) * VAG.PACKING_SAMPLES * 2 >> 4
-        ) {
+        public WaveOut(string filePath, int sampleRate, int packingSize = 0x800) {
             mPackingSize = packingSize;
-            mBuffL = new short[VAG.PACKING_SAMPLES * mPackingSize >> 4];
-            mBuffR = new short[VAG.PACKING_SAMPLES * mPackingSize >> 4];
-            mFs = new FileStream(filePath, FileMode.Open);
+            mWave = new RiffWave(filePath);
+            if (mWave.IsLoadComplete) {
+                if (null != mFs) {
+                    mFs.Close();
+                    mFs.Dispose();
+                    mFs = null;
+                }
+                var samples = mPackingSize >> 2;
+                mBuffL = new short[samples];
+                mBuffR = new short[samples];
+                mRaw = new byte[mPackingSize];
+                mWriter = loadPCM16_Stereo;
+                Setup(mWave.SampleRate, 2, (packingSize < 128 ? 128 : packingSize) * VAG.PACKING_SAMPLES * 2 >> 4);
+            } else {
+                mFs = new FileStream(filePath, FileMode.Open);
+                mBuffL = new short[VAG.PACKING_SAMPLES * mPackingSize >> 4];
+                mBuffR = new short[VAG.PACKING_SAMPLES * mPackingSize >> 4];
+                mWriter = loadVAG;
+                Setup(sampleRate, 2, (packingSize < 128 ? 128 : packingSize) * VAG.PACKING_SAMPLES * 2 >> 4);
+            }
         }
 
         public new void Dispose() {
@@ -76,7 +113,7 @@ namespace ADPCM {
             int pos = 0;
             while (pos < BufferSize) {
                 if (mLoadSize < mBuffL.Length) {
-                    load();
+                    mWriter();
                 }
                 for (int j = 0; j < mBuffL.Length && pos < BufferSize; j++) {
                     WaveBuffer[pos] = mBuffL[j];
@@ -90,7 +127,7 @@ namespace ADPCM {
             }
         }
 
-        void load() {
+        void loadVAG() {
             for (int i = 0, j = 0; i < mPackingSize; i += 16, j += VAG.PACKING_SAMPLES) {
                 mFs.Read(mAdpcmL.EncBuf, 0, mAdpcmL.EncBuf.Length);
                 mAdpcmL.Dec(mAdpcmL.EncBuf);
@@ -113,6 +150,18 @@ namespace ADPCM {
                 mStopped = true;
             }
             mLoadSize = VAG.PACKING_SAMPLES * mPackingSize >> 4;
+        }
+
+        void loadPCM16_Stereo() {
+            mWave.SetData(mRaw);
+            for (int i = 0, j = 0; i < mBuffL.Length; i++, j += 4) {
+                mBuffL[i] = BitConverter.ToInt16(mRaw, j);
+                mBuffR[i] = BitConverter.ToInt16(mRaw, j + 2);
+            }
+            mLoadSize = mBuffL.Length;
+            if (FileSize <= Position) {
+                mStopped = true;
+            }
         }
     }
 }

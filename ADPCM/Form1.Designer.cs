@@ -39,6 +39,7 @@ namespace ADPCM {
             this.label4 = new System.Windows.Forms.Label();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.trackbar1 = new ADPCM.Trackbar();
+            this.lblPos = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numChannels)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPackingSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numSampleRate)).BeginInit();
@@ -208,10 +209,10 @@ namespace ADPCM {
             this.listBox1.Font = new System.Drawing.Font("ＭＳ Ｐゴシック", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.listBox1.FormattingEnabled = true;
             this.listBox1.ItemHeight = 12;
-            this.listBox1.Location = new System.Drawing.Point(12, 108);
+            this.listBox1.Location = new System.Drawing.Point(12, 120);
             this.listBox1.Name = "listBox1";
             this.listBox1.ScrollAlwaysVisible = true;
-            this.listBox1.Size = new System.Drawing.Size(508, 148);
+            this.listBox1.Size = new System.Drawing.Size(508, 136);
             this.listBox1.TabIndex = 12;
             this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             this.listBox1.DragDrop += new System.Windows.Forms.DragEventHandler(this.listBox1_DragDrop);
@@ -223,14 +224,25 @@ namespace ADPCM {
             this.trackbar1.BackColor = System.Drawing.Color.Transparent;
             this.trackbar1.Location = new System.Drawing.Point(12, 53);
             this.trackbar1.Name = "trackbar1";
-            this.trackbar1.Size = new System.Drawing.Size(512, 43);
+            this.trackbar1.Size = new System.Drawing.Size(512, 31);
             this.trackbar1.TabIndex = 0;
+            // 
+            // lblPos
+            // 
+            this.lblPos.AutoSize = true;
+            this.lblPos.Font = new System.Drawing.Font("Meiryo UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblPos.Location = new System.Drawing.Point(12, 87);
+            this.lblPos.Name = "lblPos";
+            this.lblPos.Size = new System.Drawing.Size(101, 15);
+            this.lblPos.TabIndex = 13;
+            this.lblPos.Text = "9999/9999packs";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(532, 268);
+            this.Controls.Add(this.lblPos);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.numPlayChannel);
@@ -274,6 +286,7 @@ namespace ADPCM {
         private System.Windows.Forms.NumericUpDown numPlayChannel;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.Label lblPos;
     }
 }
 

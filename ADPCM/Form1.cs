@@ -55,6 +55,7 @@ namespace ADPCM {
 
         private void timer1_Tick(object sender, EventArgs e) {
             if (null == mWave) {
+                lblPos.Text = string.Format("{0}/{1}packs\noffset:0x{2}", trackbar1.Value, trackbar1.MaxValue, 0);
                 return;
             }
             if(trackbar1.IsDrag) {
@@ -75,6 +76,7 @@ namespace ADPCM {
                 }
                 listBox1.SelectedIndex++;
             }
+            lblPos.Text = string.Format("{0}/{1}packs\noffset:0x{2}", trackbar1.Value, trackbar1.MaxValue, mWave.Position.ToString("X"));
         }
 
         private void numChannels_ValueChanged(object sender, EventArgs e) {

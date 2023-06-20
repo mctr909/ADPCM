@@ -119,8 +119,6 @@ namespace ADPCM {
             mG.FillPolygon(BKNOB, mKnobPoly);
             mG.DrawPolygon(PKNOB, mKnobPoly);
 
-            mG.DrawString(Value.ToString() + "/" + MaxValue, ValueFont, Brushes.Black, 0, KNOB_HEIGHT * 2 + 2);
-
             pictureBox1.Image = pictureBox1.Image;
         }
     }
