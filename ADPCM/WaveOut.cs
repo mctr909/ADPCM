@@ -8,7 +8,6 @@ namespace ADPCM {
         VAG mAdpcmL = new VAG();
         VAG mAdpcmR = new VAG();
         RiffWave mWave;
-        byte[] mRaw;
         short[] mBuffL;
         short[] mBuffR;
         int mPackingSize;
@@ -16,8 +15,8 @@ namespace ADPCM {
         bool mStopped = true;
         int mLoadSize = 0;
 
-        delegate void Writer();
-        Writer mWriter;
+        delegate void Loader();
+        Loader mLoader;
 
         public int Channels = 2;
         public long FileSize {
@@ -49,24 +48,27 @@ namespace ADPCM {
 
         public WaveOut(string filePath, int sampleRate, int packingSize = 0x800) {
             mPackingSize = packingSize;
+            if (null != mFs) {
+                mFs.Close();
+                mFs.Dispose();
+                mFs = null;
+            }
+            if (null != mWave) {
+                mWave.Close();
+            }
             mWave = new RiffWave(filePath);
             if (mWave.IsLoadComplete) {
-                if (null != mFs) {
-                    mFs.Close();
-                    mFs.Dispose();
-                    mFs = null;
-                }
                 var samples = mPackingSize >> 2;
                 mBuffL = new short[samples];
                 mBuffR = new short[samples];
-                mRaw = new byte[mPackingSize];
-                mWriter = loadPCM16_Stereo;
+                mWave.AllocateBuffer(samples);
+                mLoader = loadPCM;
                 Setup(mWave.SampleRate, 2, (packingSize < 128 ? 128 : packingSize) * VAG.PACKING_SAMPLES * 2 >> 4);
             } else {
                 mFs = new FileStream(filePath, FileMode.Open);
                 mBuffL = new short[VAG.PACKING_SAMPLES * mPackingSize >> 4];
                 mBuffR = new short[VAG.PACKING_SAMPLES * mPackingSize >> 4];
-                mWriter = loadVAG;
+                mLoader = loadVAG;
                 Setup(sampleRate, 2, (packingSize < 128 ? 128 : packingSize) * VAG.PACKING_SAMPLES * 2 >> 4);
             }
         }
@@ -113,7 +115,7 @@ namespace ADPCM {
             int pos = 0;
             while (pos < BufferSize) {
                 if (mLoadSize < mBuffL.Length) {
-                    mWriter();
+                    mLoader();
                 }
                 for (int j = 0; j < mBuffL.Length && pos < BufferSize; j++) {
                     WaveBuffer[pos] = mBuffL[j];
@@ -152,12 +154,8 @@ namespace ADPCM {
             mLoadSize = VAG.PACKING_SAMPLES * mPackingSize >> 4;
         }
 
-        void loadPCM16_Stereo() {
-            mWave.SetData(mRaw);
-            for (int i = 0, j = 0; i < mBuffL.Length; i++, j += 4) {
-                mBuffL[i] = BitConverter.ToInt16(mRaw, j);
-                mBuffR[i] = BitConverter.ToInt16(mRaw, j + 2);
-            }
+        void loadPCM() {
+            mWave.SetBuffer(mBuffL, mBuffR);
             mLoadSize = mBuffL.Length;
             if (FileSize <= Position) {
                 mStopped = true;

@@ -2,19 +2,36 @@
 using System.Text;
 
 abstract class RiffFile {
+    public bool IsLoadComplete { get; protected set; } = false;
+    public long Length {
+        get { return mFs.Length; }
+    }
+    public long Position {
+        get { return mFs.Position; }
+        set { mFs.Position = value; }
+    }
+
     protected int mFileSize;
     protected FileStream mFs;
 
+    public RiffFile() { }
     public RiffFile(string path) {
         load(path);
+    }
+
+    public void Close() {
+        if (null != mFs) {
+            mFs.Close();
+            mFs.Dispose();
+            mFs = null;
+        }
     }
 
     void load(string path) {
         mFs = new FileStream(path, FileMode.Open, FileAccess.Read);
         mFileSize = 0;
         if (mFs.Length < 12) {
-            mFs.Close();
-            mFs.Dispose();
+            Close();
             return;
         }
 
@@ -25,14 +42,12 @@ abstract class RiffFile {
         mFs.Read(bFileSize, 0, bFileSize.Length);
         mFs.Read(bFileType, 0, bFileType.Length);
 
-        if ('R' != bRiffId[0] || 'I' != bRiffId[1] || 'F' != bRiffId[2] || 'F' != bRiffId[3]) {
-            mFs.Close();
-            mFs.Dispose();
+        if ("RIFF" != Encoding.ASCII.GetString(bRiffId)) {
+            Close();
             return;
         }
         if (!CheckType(Encoding.ASCII.GetString(bFileType))) {
-            mFs.Close();
-            mFs.Dispose();
+            Close();
             return;
         }
 
@@ -43,8 +58,7 @@ abstract class RiffFile {
         mFileSize += 8;
         if (mFs.Length < mFileSize) {
             mFileSize = 0;
-            mFs.Close();
-            mFs.Dispose();
+            Close();
             return;
         }
 
@@ -80,5 +94,7 @@ abstract class RiffFile {
     protected abstract bool LoadChunk(string type, int size);
     protected abstract bool LoadList(string type, int size);
 
-    protected virtual void LoadComplete() { }
+    protected virtual void LoadComplete() {
+        IsLoadComplete = true;
+    }
 }
