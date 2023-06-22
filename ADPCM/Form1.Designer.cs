@@ -38,9 +38,9 @@ namespace ADPCM {
             this.numPlayChannel = new System.Windows.Forms.NumericUpDown();
             this.label4 = new System.Windows.Forms.Label();
             this.listBox1 = new System.Windows.Forms.ListBox();
-            this.trackbar1 = new ADPCM.Trackbar();
             this.lblPos = new System.Windows.Forms.Label();
             this.btnEncode = new System.Windows.Forms.Button();
+            this.trackbar1 = new ADPCM.Trackbar();
             ((System.ComponentModel.ISupportInitialize)(this.numChannels)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPackingSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numSampleRate)).BeginInit();
@@ -207,26 +207,18 @@ namespace ADPCM {
             // 
             // listBox1
             // 
-            this.listBox1.Font = new System.Drawing.Font("ＭＳ Ｐゴシック", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.listBox1.Font = new System.Drawing.Font("ＭＳ Ｐゴシック", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.listBox1.FormattingEnabled = true;
-            this.listBox1.ItemHeight = 12;
+            this.listBox1.ItemHeight = 15;
             this.listBox1.Location = new System.Drawing.Point(12, 120);
             this.listBox1.Name = "listBox1";
             this.listBox1.ScrollAlwaysVisible = true;
-            this.listBox1.Size = new System.Drawing.Size(508, 136);
+            this.listBox1.Size = new System.Drawing.Size(508, 139);
             this.listBox1.TabIndex = 12;
             this.listBox1.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             this.listBox1.DragDrop += new System.Windows.Forms.DragEventHandler(this.listBox1_DragDrop);
             this.listBox1.DragEnter += new System.Windows.Forms.DragEventHandler(this.listBox1_DragEnter);
             this.listBox1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.listBox1_MouseDown);
-            // 
-            // trackbar1
-            // 
-            this.trackbar1.BackColor = System.Drawing.Color.Transparent;
-            this.trackbar1.Location = new System.Drawing.Point(12, 53);
-            this.trackbar1.Name = "trackbar1";
-            this.trackbar1.Size = new System.Drawing.Size(512, 31);
-            this.trackbar1.TabIndex = 0;
             // 
             // lblPos
             // 
@@ -247,6 +239,14 @@ namespace ADPCM {
             this.btnEncode.Text = "変換";
             this.btnEncode.UseVisualStyleBackColor = true;
             this.btnEncode.Click += new System.EventHandler(this.btnEncode_Click);
+            // 
+            // trackbar1
+            // 
+            this.trackbar1.BackColor = System.Drawing.Color.Transparent;
+            this.trackbar1.Location = new System.Drawing.Point(12, 53);
+            this.trackbar1.Name = "trackbar1";
+            this.trackbar1.Size = new System.Drawing.Size(512, 31);
+            this.trackbar1.TabIndex = 0;
             // 
             // Form1
             // 

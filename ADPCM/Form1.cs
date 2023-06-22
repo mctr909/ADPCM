@@ -45,11 +45,9 @@ namespace ADPCM {
                 trackbar1.Value = 0;
             }
             if ("再生" == btnPlay.Text) {
-                mWave.Start();
-                btnPlay.Text = "一時停止";
+                play();
             } else {
-                mWave.Stop();
-                btnPlay.Text = "再生";
+                stop();
             }
         }
 
@@ -118,7 +116,7 @@ namespace ADPCM {
             load();
             if ("一時停止" == btnPlay.Text) {
                 setPos();
-                mWave.Start();
+                play();
             }
         }
 
@@ -160,9 +158,8 @@ namespace ADPCM {
             }
             Text = filePath;
             load();
-            btnPlay.Text = "一時停止";
             trackbar1.Value = 0;
-            mWave.Start();
+            play();
         }
 
         void setPos() {
@@ -170,6 +167,18 @@ namespace ADPCM {
             var pos = trackbar1.Value * mWave.PackingSize;
             var ofs = (int)numPlayChannel.Value * mWave.PackingSize;
             mWave.Position = pos / div * div + ofs;
+        }
+
+        void play() {
+            btnPlay.Text = "一時停止";
+            btnEncode.Enabled = false;
+            mWave.Start();
+        }
+
+        void stop() {
+            mWave.Stop();
+            btnPlay.Text = "再生";
+            btnEncode.Enabled = true;
         }
 
         void load() {
