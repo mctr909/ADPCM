@@ -10,6 +10,10 @@ namespace ADPCM {
         RiffWave mWave;
         VAG mVagL = new VAG();
         VAG mVagR = new VAG();
+        ADPCM2 mAdpcmL;
+        ADPCM2 mAdpcmR;
+        ADPCM2 mPcmL;
+        ADPCM2 mPcmR;
 
         int mPackingSize;
         int mBufferSamples;
@@ -17,6 +21,8 @@ namespace ADPCM {
         long mPosition = 0;
         short[] mBuffL;
         short[] mBuffR;
+        byte[] mEncL;
+        byte[] mEncR;
 
         bool mStop = false;
         bool mStopped = true;
@@ -63,13 +69,34 @@ namespace ADPCM {
             mPackingSize = packingSize;
             closeFile();
             openFile();
-            mBuffL = new short[mBufferSamples];
-            mBuffR = new short[mBufferSamples];
+
             if (mWave.IsLoadComplete) {
+                mAdpcmL = new ADPCM2(16, ADPCM2.TYPE.BIT3);
+                mAdpcmR = new ADPCM2(16, ADPCM2.TYPE.BIT3);
+                mPcmL = new ADPCM2(16, ADPCM2.TYPE.BIT3);
+                mPcmR = new ADPCM2(16, ADPCM2.TYPE.BIT3);
+                mEncL = new byte[mAdpcmL.PackBytes];
+                mEncR = new byte[mAdpcmR.PackBytes];
+                mBufferSamples = mAdpcmL.Samples;
+                mPackingSize = mBufferSamples * mWave.SamplePerBytes;
+                mWave.AllocateBuffer(mBufferSamples);
+                switch (mWave.Channels) {
+                case 1:
+                    mLoader = loadPCMMono;
+                    break;
+                case 2:
+                    mLoader = loadPCMStereo;
+                    break;
+                }
                 mPosition = mWave.Position;
-                Setup(mWave.SampleRate, 2, mBufferSamples);
+                mBuffL = new short[mBufferSamples];
+                mBuffR = new short[mBufferSamples];
+                Setup(mWave.SampleRate, 2, mPackingSize);
             } else {
+                mLoader = loadVAG;
                 mPosition = 0;
+                mBuffL = new short[mBufferSamples];
+                mBuffR = new short[mBufferSamples];
                 Setup(sampleRate, 2, mBufferSamples);
             }
         }
@@ -151,6 +178,10 @@ namespace ADPCM {
         }
         void loadPCMStereo() {
             mWave.SetBuffer(mBuffL, mBuffR);
+            mAdpcmL.Encode(mBuffL, mEncL);
+            mAdpcmR.Encode(mBuffR, mEncR);
+            mPcmL.Decode(mBuffL, mEncL);
+            mPcmR.Decode(mBuffR, mEncR);
             mLoadSamples = mBuffL.Length;
             mPosition += mLoadSamples * mWave.SamplePerBytes;
             if (FileSize <= Position) {
@@ -159,6 +190,9 @@ namespace ADPCM {
         }
         void loadPCMMono() {
             mWave.SetBuffer(mBuffL);
+            mAdpcmL.Encode(mBuffL, mEncL);
+            mPcmL.Decode(mBuffL, mEncL);
+            Array.Copy(mBuffL, 0, mBuffR, 0, mBuffR.Length);
             mLoadSamples = mBuffL.Length;
             mPosition += mLoadSamples * mWave.SamplePerBytes;
             if (FileSize <= Position) {
@@ -169,21 +203,10 @@ namespace ADPCM {
         void openFile() {
             mWave = new RiffWave(mFilePath);
             if (mWave.IsLoadComplete) {
-                mBufferSamples = 24;
-                mPackingSize = 3;
                 mWave.AllocateBuffer(mBufferSamples);
-                switch (mWave.Channels) {
-                case 1:
-                    mLoader = loadPCMMono;
-                    break;
-                case 2:
-                    mLoader = loadPCMStereo;
-                    break;
-                }
             } else {
                 mFs = new FileStream(mFilePath, FileMode.Open);
                 mBufferSamples = (mPackingSize < 128 ? 128 : mPackingSize) * VAG.PACKING_SAMPLES * 2 >> 4;
-                mLoader = loadVAG;
             }
         }
         void closeFile() {

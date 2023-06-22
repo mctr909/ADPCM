@@ -8,29 +8,32 @@ class ADPCM2 {
 		BIT4 = 4
 	}
 
-	public readonly int Bit;
-	public readonly int PackingSamples;
-	public readonly int PackingBytes;
+	public readonly int Samples;
+	public readonly int PackBytes;
 
-	public int Samples { get; private set; }
+	readonly int Bit;
+	readonly int PackingSamples;
+	readonly int PackingBytes;
 
 	readonly int[] MASK = { 0b1, 0b11, 0b111, 0b1111 };
 	readonly int[] MAX_VALUE = { 0, 1, 3, 7 };
 	readonly int[] MIN_VALUE = { 0, -2, -4, -8 };
+	readonly double[] KE = { 0.8, 0.75, 0.75, 0.75 };
+	readonly double[] KD = { 0.0, 3.00, 3.00, 3.00 };
 	readonly double[][] DELTA_STEP = {
 		new double[] {
 			1.7500, // 0b000
-			0.5000, // 0b001
-			0.9375, // 0b010
-			1.3750, // 0b011
-			1.3750, // 0b100
-			0.9375, // 0b101
-			0.5000, // 0b110
+			0.6250, // 0b001
+			0.9325, // 0b010
+			1.2500, // 0b011
+			1.2500, // 0b100
+			0.9325, // 0b101
+			0.6250, // 0b110
 			1.7500  // 0b111
 		}, // 1bit
-        new double[] { 0.75, 1.375, 1.375 }, // 2bit
-		new double[] { 0.75, 1.0, 1.25, 1.75, 1.75 }, // 3bit
-		new double[] { 0.75, 1.0, 1.0, 1.125, 1.125, 1.5, 1.5, 1.75, 1.75 } // 4bit
+		new double[] { 0.6250, 1.5000, 1.5000 }, // 2bit
+		new double[] { 0.7500, 1.2500, 1.2500, 1.7500, 1.7500 }, // 3bit
+		new double[] { 0.7500, 1.1250, 1.1250, 1.1250, 1.1250, 1.5, 1.5, 1.85, 1.85 } // 4bit
 	};
 
 	int mType;
@@ -51,8 +54,8 @@ class ADPCM2 {
 		case TYPE.BIT2:
 			mType = 1;
 			Bit = 2;
-			PackingSamples = 24;
-			PackingBytes = 6;
+			PackingSamples = 16;
+			PackingBytes = 4;
 			break;
 		case TYPE.BIT3:
 			mType = 2;
@@ -63,11 +66,12 @@ class ADPCM2 {
 		case TYPE.BIT4:
 			mType = 3;
 			Bit = 4;
-			PackingSamples = 12;
-			PackingBytes = 6;
+			PackingSamples = 8;
+			PackingBytes = 4;
 			break;
 		}
 		Samples = PackingSamples * packes;
+		PackBytes = PackingBytes * packes;
 	}
 
 	void update(int code) {
@@ -76,11 +80,11 @@ class ADPCM2 {
 		} else {
 			mDelta *= DELTA_STEP[mType][code];
 		}
-		if (mDelta < 1) {
-			mDelta = 1;
+		if (mDelta < 3) {
+			mDelta = 3;
 		}
-		if (12288 < mDelta) {
-			mDelta = 12288;
+		if (16384 < mDelta) {
+			mDelta = 16384;
 		}
 		mPredict += code * mDelta;
 	}
@@ -106,8 +110,8 @@ class ADPCM2 {
 		for (int si = 0, bi = 0; si < Samples; si += PackingSamples, bi += PackingBytes) {
 			long output = 0;
 			for (int j = 0, sj = si; j < PackingSamples && sj < Samples; j++, sj++) {
-				/*** フィルタ ***/
-				mFilter = (mFilter + p_input[sj]) * 0.5;
+				/*** フィルター ***/
+				mFilter = mFilter * KE[mType] + p_input[sj] * (1.0 - KE[mType]);
 				/*** エンコード ***/
 				int code;
 				if (0 == mType) {
@@ -143,6 +147,7 @@ class ADPCM2 {
 			for (int j = 0, sj = si; j < PackingSamples && sj < Samples; j++, sj++) {
 				/*** デコード ***/
 				var code = (int)(input >> (Bit * j)) & MASK[mType];
+				double output;
 				if (0 == mType) {
 					update1bit(code);
 				} else {
@@ -152,7 +157,7 @@ class ADPCM2 {
 					update(code);
 				}
 				/*** 出力 ***/
-				var output = mPredict + (mPredict - mFilter);
+				output = mPredict + (mPredict - mFilter) * KD[mType];
 				mFilter = mPredict;
 				if (output < -32768) {
 					output = -32768;
@@ -181,8 +186,8 @@ class ADPCM2 {
 		switch (wav.Channels) {
 		case 1: {
 			var adpcm = new ADPCM2(1, type);
-			var input = new short[adpcm.PackingSamples];
-			var output = new byte[adpcm.PackingBytes];
+			var input = new short[adpcm.Samples];
+			var output = new byte[adpcm.PackBytes];
 			wav.AllocateBuffer(adpcm.PackingSamples);
 			for (int i = 0; i < wav.Samples; i += adpcm.PackingSamples) {
 				wav.SetBuffer(input);
@@ -194,10 +199,10 @@ class ADPCM2 {
 		case 2: {
 			var adpcmL = new ADPCM2(1, type);
 			var adpcmR = new ADPCM2(1, type);
-			var inputL = new short[adpcmL.PackingSamples];
-			var inputR = new short[adpcmR.PackingSamples];
-			var outputL = new byte[adpcmL.PackingBytes];
-			var outputR = new byte[adpcmR.PackingBytes];
+			var inputL = new short[adpcmL.Samples];
+			var inputR = new short[adpcmR.Samples];
+			var outputL = new byte[adpcmL.PackBytes];
+			var outputR = new byte[adpcmR.PackBytes];
 			wav.AllocateBuffer(adpcmL.PackingSamples);
 			for (int i = 0; i < wav.Samples; i += adpcmL.PackingSamples) {
 				wav.SetBuffer(inputL, inputR);
