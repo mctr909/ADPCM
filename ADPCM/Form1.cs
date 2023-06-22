@@ -54,7 +54,7 @@ namespace ADPCM {
         private void btnEncode_Click(object sender, EventArgs e) {
             var dir = Path.GetDirectoryName(Text);
             var fileName = Path.GetFileNameWithoutExtension(Text);
-            if (!ADPCM2.EncodeFile(Text, dir + "\\" + fileName + ".bin", ADPCM2.TYPE.BIT3)) {
+            if (!ADPCM2.EncodeFile(Text, dir + "\\" + fileName + ".bin", ADPCM2.TYPE.BIT1)) {
                 ADPCM2.DecodeFile(Text, dir + "\\" + fileName + "_decode.wav");
             }
         }

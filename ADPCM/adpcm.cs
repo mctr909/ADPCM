@@ -2,6 +2,7 @@ using System.IO;
 
 class ADPCM2 {
 	public enum TYPE {
+		BIT1 = 1,
 		BIT2 = 2,
 		BIT3 = 3,
 		BIT4 = 4
@@ -13,36 +14,54 @@ class ADPCM2 {
 
 	public int Samples { get; private set; }
 
-	readonly int[] MASK = { 0b11, 0b111, 0b1111 };
-	readonly int[] MAX_VALUE = { 1, 3, 7 };
-	readonly int[] MIN_VALUE = { -2, -4, -8 };
+	readonly int[] MASK = { 0b1, 0b11, 0b111, 0b1111 };
+	readonly int[] MAX_VALUE = { 0, 1, 3, 7 };
+	readonly int[] MIN_VALUE = { 0, -2, -4, -8 };
 	readonly double[][] DELTA_STEP = {
-		new double[] { 0.75, 1.375, 1.375 }, // 2bit
+		new double[] {
+			1.75, // 0b000
+			0.50, // 0b001
+			0.90, // 0b010
+			1.25, // 0b011
+			1.25, // 0b100
+			0.90, // 0b101
+			0.50, // 0b110
+			1.75  // 0b111
+		}, // 1bit
+        new double[] { 0.75, 1.375, 1.375 }, // 2bit
 		new double[] { 0.75, 1.0, 1.25, 1.75, 1.75 }, // 3bit
 		new double[] { 0.75, 1.0, 1.0, 1.125, 1.125, 1.5, 1.5, 1.75, 1.75 } // 4bit
 	};
 
 	int mType;
+	int mCodeD;
 	double mDelta = 4.0;
 	double mPredict = 0.0;
 	double mFilter = 0.0;
 
 	public ADPCM2(int packes, TYPE type) {
 		switch (type) {
-		case TYPE.BIT2:
+		case TYPE.BIT1:
 			mType = 0;
+			mCodeD = 0;
+			Bit = 1;
+			PackingSamples = 32;
+			PackingBytes = 4;
+			break;
+		case TYPE.BIT2:
+			mType = 1;
 			Bit = 2;
 			PackingSamples = 24;
 			PackingBytes = 6;
 			break;
 		case TYPE.BIT3:
-			mType = 1;
+			mType = 2;
 			Bit = 3;
 			PackingSamples = 16;
 			PackingBytes = 6;
 			break;
 		case TYPE.BIT4:
-			mType = 2;
+			mType = 3;
 			Bit = 4;
 			PackingSamples = 12;
 			PackingBytes = 6;
@@ -66,6 +85,23 @@ class ADPCM2 {
 		mPredict += code * mDelta;
 	}
 
+	void update1bit(int code) {
+		mCodeD = (mCodeD << 1) & 0b111;
+		mCodeD |= code;
+		mDelta *= DELTA_STEP[0][mCodeD];
+		if (mDelta < 0.25) {
+			mDelta = 0.25;
+		}
+		if (16384 < mDelta) {
+			mDelta = 16384;
+		}
+		if (1 == code) {
+			mPredict += mDelta;
+		} else {
+			mPredict -= mDelta;
+		}
+	}
+
 	public void Encode(short[] p_input, byte[] p_output) {
 		for (int si = 0, bi = 0; si < Samples; si += PackingSamples, bi += PackingBytes) {
 			long output = 0;
@@ -73,14 +109,20 @@ class ADPCM2 {
 				/*** フィルタ ***/
 				mFilter = (mFilter + p_input[sj]) * 0.5;
 				/*** エンコード ***/
-				var code = (int)((mFilter - mPredict) / mDelta);
-				if (code < MIN_VALUE[mType]) {
-					code = MIN_VALUE[mType];
+				int code;
+				if (0 == mType) {
+					code = (0 <= (mFilter - mPredict) / mDelta) ? 1 : 0;
+					update1bit(code);
+				} else {
+					code = (int)((mFilter - mPredict) / mDelta);
+					if (code < MIN_VALUE[mType]) {
+						code = MIN_VALUE[mType];
+					}
+					if (MAX_VALUE[mType] < code) {
+						code = MAX_VALUE[mType];
+					}
+					update(code);
 				}
-				if (MAX_VALUE[mType] < code) {
-					code = MAX_VALUE[mType];
-				}
-				update(code);
 				if (code < 0) {
 					output |= (long)(code + MASK[mType] + 1) << (Bit * j);
 				} else {
@@ -101,10 +143,14 @@ class ADPCM2 {
 			for (int j = 0, sj = si; j < PackingSamples && sj < Samples; j++, sj++) {
 				/*** デコード ***/
 				var code = (int)(input >> (Bit * j)) & MASK[mType];
-				if (MAX_VALUE[mType] < code) {
-					code -= MASK[mType] + 1;
+				if (0 == mType) {
+					update1bit(code);
+				} else {
+					if (MAX_VALUE[mType] < code) {
+						code -= MASK[mType] + 1;
+					}
+					update(code);
 				}
-				update(code);
 				/*** 出力 ***/
 				var output = mPredict + (mPredict - mFilter);
 				mFilter = mPredict;
