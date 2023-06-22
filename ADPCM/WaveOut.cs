@@ -63,7 +63,14 @@ namespace ADPCM {
                 mBuffL = new short[samples];
                 mBuffR = new short[samples];
                 mWave.AllocateBuffer(samples);
-                mLoader = loadPCM;
+                switch(mWave.Channels) {
+                case 1:
+                    mLoader = loadPCMMono;
+                    break;
+                case 2:
+                    mLoader = loadPCMStereo;
+                    break;
+                }
                 Setup(mWave.SampleRate, 2, samples);
             } else {
                 mFs = new FileStream(filePath, FileMode.Open);
@@ -155,10 +162,19 @@ namespace ADPCM {
             mLoadSize = VAG.PACKING_SAMPLES * mPackingSize >> 4;
         }
 
-        void loadPCM() {
+        void loadPCMStereo() {
             mWave.SetBuffer(mBuffL, mBuffR);
             mLoadSize = mBuffL.Length;
             if (FileSize <= Position) {
+                mStopped = true;
+            }
+        }
+        void loadPCMMono()
+        {
+            mWave.SetBuffer(mBuffL);
+            mLoadSize = mBuffL.Length;
+            if (FileSize <= Position)
+            {
                 mStopped = true;
             }
         }

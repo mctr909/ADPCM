@@ -53,6 +53,14 @@ namespace ADPCM {
             }
         }
 
+        private void btnEncode_Click(object sender, EventArgs e) {
+            var dir = Path.GetDirectoryName(Text);
+            var fileName = Path.GetFileNameWithoutExtension(Text);
+            if (!ADPCM2.EncodeFile(Text, dir + "\\" + fileName + ".bin")) {
+                ADPCM2.DecodeFile(Text, dir + "\\" + fileName + "_decode.wav");
+            }
+        }
+
         private void timer1_Tick(object sender, EventArgs e) {
             if (null == mWave) {
                 lblPos.Text = string.Format("{0}/{1}packs\noffset:0x{2}", trackbar1.Value, trackbar1.MaxValue, 0);

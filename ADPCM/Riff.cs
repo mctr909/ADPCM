@@ -11,15 +11,15 @@ abstract class RiffFile {
         set { mFs.Position = value; }
     }
 
-    protected int mFileSize;
-    protected FileStream mFs;
+    protected int mFileSize = 0;
+    protected FileStream mFs = null;
 
     public RiffFile() { }
     public RiffFile(string path) {
         load(path);
     }
 
-    public void Close() {
+    public virtual void Close() {
         if (null != mFs) {
             mFs.Close();
             mFs.Dispose();
@@ -28,8 +28,11 @@ abstract class RiffFile {
     }
 
     void load(string path) {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) {
+            return;
+        }
+
         mFs = new FileStream(path, FileMode.Open, FileAccess.Read);
-        mFileSize = 0;
         if (mFs.Length < 12) {
             Close();
             return;

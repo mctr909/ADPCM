@@ -40,6 +40,7 @@ namespace ADPCM {
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.trackbar1 = new ADPCM.Trackbar();
             this.lblPos = new System.Windows.Forms.Label();
+            this.btnEncode = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.numChannels)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPackingSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numSampleRate)).BeginInit();
@@ -237,11 +238,22 @@ namespace ADPCM {
             this.lblPos.TabIndex = 13;
             this.lblPos.Text = "9999/9999packs";
             // 
+            // btnEncode
+            // 
+            this.btnEncode.Location = new System.Drawing.Point(445, 91);
+            this.btnEncode.Name = "btnEncode";
+            this.btnEncode.Size = new System.Drawing.Size(75, 23);
+            this.btnEncode.TabIndex = 14;
+            this.btnEncode.Text = "変換";
+            this.btnEncode.UseVisualStyleBackColor = true;
+            this.btnEncode.Click += new System.EventHandler(this.btnEncode_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(532, 268);
+            this.Controls.Add(this.btnEncode);
             this.Controls.Add(this.lblPos);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.label4);
@@ -287,6 +299,7 @@ namespace ADPCM {
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ListBox listBox1;
         private System.Windows.Forms.Label lblPos;
+        private System.Windows.Forms.Button btnEncode;
     }
 }
 
