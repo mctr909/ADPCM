@@ -32,20 +32,20 @@ class ADPCM2 {
 		case TYPE.BIT2:
 			mType = 0;
 			Bit = 2;
-			PackingSamples = 12;
-			PackingBytes = 3;
+			PackingSamples = 24;
+			PackingBytes = 6;
 			break;
 		case TYPE.BIT3:
 			mType = 1;
 			Bit = 3;
-			PackingSamples = 8;
-			PackingBytes = 3;
+			PackingSamples = 16;
+			PackingBytes = 6;
 			break;
 		case TYPE.BIT4:
 			mType = 2;
 			Bit = 4;
-			PackingSamples = 6;
-			PackingBytes = 3;
+			PackingSamples = 12;
+			PackingBytes = 6;
 			break;
 		}
 		Samples = PackingSamples * packes;
@@ -68,7 +68,7 @@ class ADPCM2 {
 
 	public void Encode(short[] p_input, byte[] p_output) {
 		for (int si = 0, bi = 0; si < Samples; si += PackingSamples, bi += PackingBytes) {
-			int output = 0;
+			long output = 0;
 			for (int j = 0, sj = si; j < PackingSamples && sj < Samples; j++, sj++) {
 				/*** フィルタ ***/
 				mFilter = (mFilter + p_input[sj]) * 0.5;
@@ -82,9 +82,9 @@ class ADPCM2 {
 				}
 				update(code);
 				if (code < 0) {
-					output |= (code + MASK[mType] + 1) << (Bit * j);
+					output |= (long)(code + MASK[mType] + 1) << (Bit * j);
 				} else {
-					output |= code << (Bit * j);
+					output |= (long)code << (Bit * j);
 				}
 			}
 			for (int j = 0, bj = bi; j < PackingBytes; j++, bj++) {
@@ -94,13 +94,13 @@ class ADPCM2 {
 	}
 	public void Decode(short[] p_output, byte[] p_input) {
 		for (int si = 0, bi = 0; si < Samples; si += PackingSamples, bi += PackingBytes) {
-			int input = 0;
+			long input = 0;
 			for (int j = 0, bj = bi; j < PackingBytes; j++, bj++) {
-				input |= p_input[bj] << (8 * j);
+				input |= (long)p_input[bj] << (8 * j);
 			}
 			for (int j = 0, sj = si; j < PackingSamples && sj < Samples; j++, sj++) {
 				/*** デコード ***/
-				int code = (input >> (Bit * j)) & MASK[mType];
+				var code = (int)(input >> (Bit * j)) & MASK[mType];
 				if (MAX_VALUE[mType] < code) {
 					code -= MASK[mType] + 1;
 				}
@@ -168,7 +168,6 @@ class ADPCM2 {
 		wav.Close();
 		return true;
 	}
-
 	public static void DecodeFile(string inputPath, string outputPath) {
 		var fs = new FileStream(inputPath, FileMode.Open);
 		var br = new BinaryReader(fs);
