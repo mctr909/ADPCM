@@ -18,7 +18,7 @@ class ADPCM2 {
 	readonly int[] MASK = { 0b1, 0b11, 0b111, 0b1111 };
 	readonly int[] MAX_VALUE = { 0, 1, 3, 7 };
 	readonly int[] MIN_VALUE = { 0, -2, -4, -8 };
-	readonly double[] KE = { 0.8, 0.75, 0.75, 0.75 };
+	readonly double[] KE = { 0.6, 0.75, 0.75, 0.75 };
 	readonly double[] KD = { 0.0, 3.00, 3.00, 3.00 };
 	readonly double[][] DELTA_STEP = {
 		new double[] {

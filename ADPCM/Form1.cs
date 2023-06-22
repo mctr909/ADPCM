@@ -120,6 +120,15 @@ namespace ADPCM {
             }
         }
 
+        private void numBit_ValueChanged(object sender, EventArgs e) {
+            var pos = mWave.Sample;
+            load();
+            if ("一時停止" == btnPlay.Text) {
+                play();
+                mWave.Sample = pos;
+            }
+        }
+
         private void listBox1_MouseDown(object sender, MouseEventArgs e) {
             if (MouseButtons.Right == e.Button) {
                 var itemIndex = listBox1.IndexFromPoint(e.X, e.Y);
@@ -185,7 +194,7 @@ namespace ADPCM {
             if (null != mWave) {
                 mWave.Dispose();
             }
-            mWave = new WaveOut(Text, (int)numSampleRate.Value, (int)numPackingSize.Value << 4);
+            mWave = new WaveOut(Text, (int)numSampleRate.Value, (int)numPackingSize.Value << 4, (int)numBit.Value);
             mWave.Channels = (int)numChannels.Value;
             var len = mWave.FileSize / mWave.PackingSize;
             var div = 100;

@@ -41,10 +41,12 @@ namespace ADPCM {
             this.lblPos = new System.Windows.Forms.Label();
             this.btnEncode = new System.Windows.Forms.Button();
             this.trackbar1 = new ADPCM.Trackbar();
+            this.numBit = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.numChannels)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPackingSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numSampleRate)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPlayChannel)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numBit)).BeginInit();
             this.SuspendLayout();
             // 
             // btnPlay
@@ -248,11 +250,36 @@ namespace ADPCM {
             this.trackbar1.Size = new System.Drawing.Size(512, 31);
             this.trackbar1.TabIndex = 0;
             // 
+            // numBit
+            // 
+            this.numBit.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.numBit.Location = new System.Drawing.Point(381, 92);
+            this.numBit.Maximum = new decimal(new int[] {
+            4,
+            0,
+            0,
+            0});
+            this.numBit.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numBit.Name = "numBit";
+            this.numBit.Size = new System.Drawing.Size(61, 22);
+            this.numBit.TabIndex = 15;
+            this.numBit.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            this.numBit.ValueChanged += new System.EventHandler(this.numBit_ValueChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(532, 268);
+            this.Controls.Add(this.numBit);
             this.Controls.Add(this.btnEncode);
             this.Controls.Add(this.lblPos);
             this.Controls.Add(this.listBox1);
@@ -277,6 +304,7 @@ namespace ADPCM {
             ((System.ComponentModel.ISupportInitialize)(this.numPackingSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numSampleRate)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPlayChannel)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numBit)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -300,6 +328,7 @@ namespace ADPCM {
         private System.Windows.Forms.ListBox listBox1;
         private System.Windows.Forms.Label lblPos;
         private System.Windows.Forms.Button btnEncode;
+        private System.Windows.Forms.NumericUpDown numBit;
     }
 }
 

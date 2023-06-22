@@ -62,19 +62,39 @@ namespace ADPCM {
                 mPosition = value;
             }
         }
+        public int Sample {
+            get {
+                if (null != mWave && mWave.IsLoadComplete) {
+                    return (int)(mWave.Position / mWave.SamplePerBytes);
+                } else if (null != mFs) {
+                    return (int)mFs.Position;
+                } else {
+                    return 0;
+                }
+            }
+            set {
+                if (null != mWave && mWave.IsLoadComplete) {
+                    mWave.Position = value * mWave.SamplePerBytes;
+                } else if (null != mFs) {
+                    mFs.Position = value;
+                }
+                mPosition = value;
+            }
+        }
+
         public int PackingSize { get { return mPackingSize; } }
 
-        public WaveOut(string filePath, int sampleRate, int packingSize = 0x800) {
+        public WaveOut(string filePath, int sampleRate, int packingSize = 0x800, int bits = 4) {
             mFilePath = filePath;
             mPackingSize = packingSize;
             closeFile();
             openFile();
 
             if (mWave.IsLoadComplete) {
-                mAdpcmL = new ADPCM2(16, ADPCM2.TYPE.BIT3);
-                mAdpcmR = new ADPCM2(16, ADPCM2.TYPE.BIT3);
-                mPcmL = new ADPCM2(16, ADPCM2.TYPE.BIT3);
-                mPcmR = new ADPCM2(16, ADPCM2.TYPE.BIT3);
+                mAdpcmL = new ADPCM2(24, (ADPCM2.TYPE)bits);
+                mAdpcmR = new ADPCM2(24, (ADPCM2.TYPE)bits);
+                mPcmL = new ADPCM2(24, (ADPCM2.TYPE)bits);
+                mPcmR = new ADPCM2(24, (ADPCM2.TYPE)bits);
                 mEncL = new byte[mAdpcmL.PackBytes];
                 mEncR = new byte[mAdpcmR.PackBytes];
                 mBufferSamples = mAdpcmL.Samples;
@@ -115,7 +135,7 @@ namespace ADPCM {
         }
 
         public void Start() {
-            if (!mStop) {
+            if (!mStopped) {
                 return;
             }
             openFile();
