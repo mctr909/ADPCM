@@ -58,18 +58,19 @@ namespace ADPCM {
             }
             mWave = new RiffWave(filePath);
             if (mWave.IsLoadComplete) {
-                var samples = mPackingSize >> 2;
+                var samples = ADPCM2.PACKING_SAMPLES * 4;
+                mPackingSize = ADPCM2.PACKING_BYTES * 4;
                 mBuffL = new short[samples];
                 mBuffR = new short[samples];
                 mWave.AllocateBuffer(samples);
                 mLoader = loadPCM;
-                Setup(mWave.SampleRate, 2, (packingSize < 128 ? 128 : packingSize) * VAG.PACKING_SAMPLES * 2 >> 4);
+                Setup(mWave.SampleRate, 2, samples);
             } else {
                 mFs = new FileStream(filePath, FileMode.Open);
                 mBuffL = new short[VAG.PACKING_SAMPLES * mPackingSize >> 4];
                 mBuffR = new short[VAG.PACKING_SAMPLES * mPackingSize >> 4];
                 mLoader = loadVAG;
-                Setup(sampleRate, 2, (packingSize < 128 ? 128 : packingSize) * VAG.PACKING_SAMPLES * 2 >> 4);
+                Setup(sampleRate, 2, (mPackingSize < 128 ? 128 : mPackingSize) * VAG.PACKING_SAMPLES * 2 >> 4);
             }
         }
 

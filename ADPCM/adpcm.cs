@@ -1,7 +1,14 @@
 class ADPCM2 {
-	public int SAMPLES { get; private set; }
+    public const int PACKING_SAMPLES = 8;
+    public const int PACKING_BYTES = 3;
 
-	readonly double[] DELTA_STEP = {
+    public int SAMPLES { get; private set; }
+
+	const int MAX_VALUE = 3;
+    const int MIN_VALUE = -4;
+    const int BIT = 3;
+    const int MASK = (1 << BIT) - 1;
+    readonly double[] DELTA_STEP = {
 		0.75, 1.0, 1.25, 1.75, 1.75
 	};
 
@@ -28,32 +35,38 @@ class ADPCM2 {
 		m_predict += code * m_delta;
 	}
 
-	public void encode(short[] p_input, byte[] p_output) {
-		for (int i = 0, b = 0; i < SAMPLES; i += 2, b++) {
+	public void Encode(short[] p_input, byte[] p_output) {
+		for (int si = 0, bi = 0; si < SAMPLES; si += PACKING_SAMPLES, bi += PACKING_BYTES) {
 			int output = 0;
-			for (int j = 0, s = i; j < 2 && s < SAMPLES; j++, s++) {
+			for (int j = 0, sj = si; j < PACKING_SAMPLES && sj < SAMPLES; j++, sj++) {
 				/*** フィルタ ***/
-				m_filter = (m_filter + p_input[s]) * 0.5;
+				m_filter = (m_filter + p_input[sj]) * 0.5;
 				/*** エンコード ***/
 				var code = (int)((m_filter - m_predict) / m_delta);
-				if (code < -4) {
-					code = -4;
+				if (code < MIN_VALUE) {
+					code = MIN_VALUE;
 				}
-				if (3 < code) {
-					code = 3;
+				if (MAX_VALUE < code) {
+					code = MAX_VALUE;
 				}
-				output |= (byte)((code + 4) << (3 * j));
+				output |= (byte)((code - MIN_VALUE) << (BIT * j));
 				update(code);
 			}
-			p_output[b] = (byte)output;
+			for (int j = 0, bj = bi; j < PACKING_BYTES; j++, bj++) {
+				p_output[bj] = (byte)((output >> (8 * j)) & 0xFF);
+			}
 		}
 	}
 
-	public void decode(short[] p_output, byte[] p_input) {
-		for (int i = 0, b = 0; i < SAMPLES; i += 2, b++) {
-			for (int j = 0, s = i; j < 2 && s < SAMPLES; j++, s++) {
+	public void Decode(short[] p_output, byte[] p_input) {
+		for (int si = 0, bi = 0; si < SAMPLES; si += PACKING_SAMPLES, bi += PACKING_BYTES) {
+			int input = 0;
+			for (int j = 0, bj = bi; j < PACKING_BYTES; j++, bj++) {
+				input |= p_input[bj] << (8 * j);
+			}
+            for (int j = 0, sj = si; j < PACKING_SAMPLES && sj < SAMPLES; j++, sj++) {
 				/*** デコード ***/
-				int code = ((p_input[b] >> (3 * j)) & 7) - 4;
+				int code = ((input >> (BIT * j)) & MASK) + MIN_VALUE;
 				update(code);
 				/*** 出力 ***/
 				var output = m_predict + (m_predict - m_filter);
@@ -64,7 +77,7 @@ class ADPCM2 {
 				if (32767 < output) {
 					output = 32767;
 				}
-				p_output[s] = (short)output;
+				p_output[sj] = (short)output;
 			}
 		}
 	}

@@ -48,8 +48,9 @@ namespace ADPCM {
             mAdpcmR = new ADPCM2(samples);
             mPcmL = new ADPCM2(samples);
             mPcmR = new ADPCM2(samples);
-            mEncL = new byte[samples >> 1];
-            mEncR = new byte[samples >> 1];
+            var packingSize = samples * ADPCM2.PACKING_BYTES / ADPCM2.PACKING_SAMPLES;
+            mEncL = new byte[packingSize];
+            mEncR = new byte[packingSize];
         }
 
         protected override bool CheckType(string type) {
@@ -169,10 +170,10 @@ namespace ADPCM {
                 left[i] = BitConverter.ToInt16(mBuffer, j);
                 right[i] = BitConverter.ToInt16(mBuffer, j + 2);
             }
-            mAdpcmL.encode(left, mEncL);
-            mAdpcmR.encode(right, mEncR);
-            mPcmL.decode(left, mEncL);
-            mPcmR.decode(right, mEncR);
+            mAdpcmL.Encode(left, mEncL);
+            mAdpcmR.Encode(right, mEncR);
+            mPcmL.Decode(left, mEncL);
+            mPcmR.Decode(right, mEncR);
         }
         void SetBufferInt24Ch1(short[] left, short[] right) {
             mFs.Read(mBuffer, 0, mBuffer.Length);
@@ -282,10 +283,10 @@ namespace ADPCM {
                 left[i] = (short)(l * 32767);
                 right[i] = (short)(r * 32767);
             }
-            mAdpcmL.encode(left, mEncL);
-            mAdpcmR.encode(right, mEncR);
-            mPcmL.decode(left, mEncL);
-            mPcmR.decode(right, mEncR);
+            mAdpcmL.Encode(left, mEncL);
+            mAdpcmR.Encode(right, mEncR);
+            mPcmL.Decode(left, mEncL);
+            mPcmR.Decode(right, mEncR);
         }
         void SetBufferFloat64Ch1(short[] left, short[] right) {
             mFs.Read(mBuffer, 0, mBuffer.Length);
