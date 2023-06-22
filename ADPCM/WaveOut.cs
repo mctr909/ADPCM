@@ -5,23 +5,27 @@ using System.Threading;
 namespace ADPCM {
     internal class WaveOut : WaveLib, IDisposable {
         string mFilePath = "";
+
         FileStream mFs;
-        VAG mAdpcmL = new VAG();
-        VAG mAdpcmR = new VAG();
         RiffWave mWave;
+        VAG mVagL = new VAG();
+        VAG mVagR = new VAG();
+
+        int mPackingSize;
+        int mBufferSamples;
+        int mLoadSamples = 0;
+        long mPosition = 0;
         short[] mBuffL;
         short[] mBuffR;
-        int mPackingSize;
+
         bool mStop = false;
         bool mStopped = true;
-        int mLoadSamples = 0;
-        int mBufferSamples;
-        long mPosition = 0;
 
         delegate void Loader();
         Loader mLoader;
 
-        public int Channels = 2;
+        public new int Channels = 2;
+
         public long FileSize {
             get {
                 if (null != mWave && mWave.IsLoadComplete) {
@@ -121,18 +125,18 @@ namespace ADPCM {
 
         void loadVAG() {
             for (int i = 0, j = 0; i < mPackingSize; i += 16, j += VAG.PACKING_SAMPLES) {
-                mFs.Read(mAdpcmL.EncBuf, 0, mAdpcmL.EncBuf.Length);
-                mAdpcmL.Dec(mAdpcmL.EncBuf);
-                Array.Copy(mAdpcmL.DecBuf, 0, mBuffL, j, VAG.PACKING_SAMPLES);
+                mFs.Read(mVagL.EncBuf, 0, mVagL.EncBuf.Length);
+                mVagL.Dec(mVagL.EncBuf);
+                Array.Copy(mVagL.DecBuf, 0, mBuffL, j, VAG.PACKING_SAMPLES);
             }
             if (1 == Channels) {
                 Array.Copy(mBuffL, 0, mBuffR, 0, mBuffR.Length);
             }
             if (2 <= Channels) {
                 for (int i = 0, j = 0; i < mPackingSize; i += 16, j += VAG.PACKING_SAMPLES) {
-                    mFs.Read(mAdpcmR.EncBuf, 0, mAdpcmR.EncBuf.Length);
-                    mAdpcmR.Dec(mAdpcmR.EncBuf);
-                    Array.Copy(mAdpcmR.DecBuf, 0, mBuffR, j, VAG.PACKING_SAMPLES);
+                    mFs.Read(mVagR.EncBuf, 0, mVagR.EncBuf.Length);
+                    mVagR.Dec(mVagR.EncBuf);
+                    Array.Copy(mVagR.DecBuf, 0, mBuffR, j, VAG.PACKING_SAMPLES);
                 }
             }
             mPosition += mPackingSize * Channels;
@@ -165,8 +169,8 @@ namespace ADPCM {
         void openFile() {
             mWave = new RiffWave(mFilePath);
             if (mWave.IsLoadComplete) {
-                mBufferSamples = ADPCM2.PACKING_SAMPLES * 4;
-                mPackingSize = ADPCM2.PACKING_BYTES * 4;
+                mBufferSamples = 24;
+                mPackingSize = 3;
                 mWave.AllocateBuffer(mBufferSamples);
                 switch (mWave.Channels) {
                 case 1:
