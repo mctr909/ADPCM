@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 
 class ADPCM2 {
 	public enum TYPE {
@@ -178,12 +179,9 @@ class ADPCM2 {
 
 		var fs = new FileStream(outputPath, FileMode.Create);
 		var bw = new BinaryWriter(fs);
-		bw.Write(wav.SampleRate);
-		bw.Write((byte)wav.Channels);
-		bw.Write((byte)type);
-		bw.Write((ushort)packes);
+		bw.Write(new byte[44]);
 
-		switch (wav.Channels) {
+        switch (wav.Channels) {
 		case 1: {
 			var adpcm = new ADPCM2(packes, type);
 			var input = new short[adpcm.Samples];
@@ -214,7 +212,25 @@ class ADPCM2 {
 			break;
 		}
 		}
-		fs.Close();
+
+		fs.Position = 0;
+        bw.Write(new char[] { 'R', 'I', 'F', 'F' });
+        bw.Write((uint)(fs.Length - 8));
+        bw.Write(new char[] { 'A', 'D', 'P', 'M' });
+
+        bw.Write(new char[] { 'f', 'm', 't', ' ' });
+        bw.Write((uint)16);
+        bw.Write((ushort)0);
+        bw.Write((ushort)wav.Channels);
+        bw.Write(wav.SampleRate);
+        bw.Write((uint)(wav.SampleRate * wav.Channels * (int)type >> 3));
+        bw.Write((ushort)packes);
+        bw.Write((ushort)type);
+
+        bw.Write(new char[] { 'd', 'a', 't', 'a' });
+        bw.Write((uint)(fs.Length - 44));
+
+        fs.Close();
 		fs.Dispose();
 		wav.Close();
 		return true;
@@ -222,11 +238,24 @@ class ADPCM2 {
 	public static void DecodeFile(string inputPath, string outputPath) {
 		var fs = new FileStream(inputPath, FileMode.Open);
 		var br = new BinaryReader(fs);
-		var sampleRate = br.ReadInt32();
-		var channels = br.ReadByte();
-		var type = (TYPE)br.ReadByte();
-		var packes = br.ReadUInt16();
-		var wav = new RiffWave(
+
+        var riffId = Encoding.ASCII.GetString(br.ReadBytes(4));
+		var fileSize = br.ReadUInt32();
+        var fileId = Encoding.ASCII.GetString(br.ReadBytes(4));
+
+        var fmtId = Encoding.ASCII.GetString(br.ReadBytes(4));
+        var fmtSize = br.ReadUInt32();
+        var fmtType = br.ReadUInt16();
+        var channels = br.ReadUInt16();
+        var sampleRate = br.ReadInt32();
+        var bytesPerSec = br.ReadUInt32();
+        var packes = br.ReadUInt16();
+        var type = (TYPE)br.ReadUInt16();
+
+        var dataId = Encoding.ASCII.GetString(br.ReadBytes(4));
+        var dataSize = br.ReadUInt32();
+
+        var wav = new RiffWave(
 			outputPath,
 			2 == channels ? RiffWave.TYPE.INT16_CH2 : RiffWave.TYPE.INT16_CH1,
 			sampleRate
