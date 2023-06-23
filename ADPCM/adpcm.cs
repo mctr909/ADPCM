@@ -88,7 +88,6 @@ class ADPCM2 {
 		}
 		mPredict += code * mDelta;
 	}
-
 	void update1bit(int code) {
 		mCodeD = (mCodeD << 1) & 0b111;
 		mCodeD |= code;
@@ -170,22 +169,11 @@ class ADPCM2 {
 		}
 	}
 
-	public static bool EncodeFile(string inputPath, string outputPath, TYPE type) {
+	public static bool EncodeFile(string inputPath, string outputPath, TYPE type, int packes) {
 		var wav = new RiffWave(inputPath);
 		if (!wav.IsLoadComplete) {
 			wav.Close();
 			return false;
-		}
-
-        ushort packes;
-		switch (type) {
-		case TYPE.BIT1:
-		case TYPE.BIT2:
-		case TYPE.BIT3:
-		case TYPE.BIT4:
-			packes = 16; break;
-		default:
-			packes = 1; break;
 		}
 
 		var fs = new FileStream(outputPath, FileMode.Create);
@@ -193,7 +181,7 @@ class ADPCM2 {
 		bw.Write(wav.SampleRate);
 		bw.Write((byte)wav.Channels);
 		bw.Write((byte)type);
-        bw.Write(packes);
+        bw.Write((ushort)packes);
 
         switch (wav.Channels) {
 		case 1: {
