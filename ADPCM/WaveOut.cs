@@ -32,11 +32,11 @@ namespace ADPCM {
         delegate void Loader();
         Loader mLoader;
 
-        public new int Channels = 2;
+        public int VagChannels = 2;
 
         public long FileSize {
             get {
-                if (null != mWave && mWave.IsLoadComplete) {
+                if (IsRiffWave) {
                     return mWave.Length;
                 } else if (null != mFs) {
                     return mFs.Length;
@@ -47,7 +47,7 @@ namespace ADPCM {
         }
         public long Position {
             get {
-                if (null != mWave && mWave.IsLoadComplete) {
+                if (IsRiffWave) {
                     return mWave.Position;
                 } else if (null != mFs) {
                     return mFs.Position;
@@ -56,7 +56,7 @@ namespace ADPCM {
                 }
             }
             set {
-                if (null != mWave && mWave.IsLoadComplete) {
+                if (IsRiffWave) {
                     mWave.Position = value;
                 } else if (null != mFs) {
                     mFs.Position = value;
@@ -66,7 +66,7 @@ namespace ADPCM {
         }
         public int Sample {
             get {
-                if (null != mWave && mWave.IsLoadComplete) {
+                if (IsRiffWave) {
                     return (int)(mWave.Position / mWave.SamplePerBytes);
                 } else if (null != mFs) {
                     return (int)mFs.Position;
@@ -75,7 +75,7 @@ namespace ADPCM {
                 }
             }
             set {
-                if (null != mWave && mWave.IsLoadComplete) {
+                if (IsRiffWave) {
                     mWave.Position = value * mWave.SamplePerBytes;
                 } else if (null != mFs) {
                     mFs.Position = value;
@@ -83,6 +83,7 @@ namespace ADPCM {
                 mPosition = value;
             }
         }
+        public bool IsRiffWave { get; private set; } = false;
 
         public int PackingSize { get { return mPackingSize; } }
 
@@ -92,7 +93,7 @@ namespace ADPCM {
             closeFile();
             openFile();
 
-            if (mWave.IsLoadComplete) {
+            if (IsRiffWave) {
                 mAdpcmL = new ADPCM2(24, (ADPCM2.TYPE)bits);
                 mAdpcmR = new ADPCM2(24, (ADPCM2.TYPE)bits);
                 mPcmL = new ADPCM2(24, (ADPCM2.TYPE)bits);
@@ -158,7 +159,7 @@ namespace ADPCM {
                 return;
             }
             openFile();
-            if (mWave.IsLoadComplete) {
+            if (IsRiffWave) {
                 mWave.Position = mPosition;
             } else {
                 mFs.Position = mPosition;
@@ -195,18 +196,18 @@ namespace ADPCM {
                 mVagL.Dec(mVagL.EncBuf);
                 Array.Copy(mVagL.DecBuf, 0, mBuffL, j, VAG.PACKING_SAMPLES);
             }
-            if (1 == Channels) {
+            if (1 == VagChannels) {
                 Array.Copy(mBuffL, 0, mBuffR, 0, mBuffR.Length);
             }
-            if (2 <= Channels) {
+            if (2 <= VagChannels) {
                 for (int i = 0, j = 0; i < mPackingSize; i += 16, j += VAG.PACKING_SAMPLES) {
                     mFs.Read(mVagR.EncBuf, 0, mVagR.EncBuf.Length);
                     mVagR.Dec(mVagR.EncBuf);
                     Array.Copy(mVagR.DecBuf, 0, mBuffR, j, VAG.PACKING_SAMPLES);
                 }
             }
-            mPosition += mPackingSize * Channels;
-            for (int c = 2; c < Channels; c++) {
+            mPosition += mPackingSize * VagChannels;
+            for (int c = 2; c < VagChannels; c++) {
                 mFs.Position += mPackingSize;
                 mPosition += mPackingSize;
             }
@@ -296,6 +297,7 @@ namespace ADPCM {
             mWave = new RiffWave(mFilePath);
             if (mWave.IsLoadComplete) {
                 mWave.AllocateBuffer(mBufferSamples);
+                IsRiffWave = true;
             } else {
                 mFs = new FileStream(mFilePath, FileMode.Open);
                 mBufferSamples = (mPackingSize < 128 ? 128 : mPackingSize) * VAG.PACKING_SAMPLES * 2 >> 4;
@@ -307,10 +309,11 @@ namespace ADPCM {
                 mFs.Dispose();
                 mFs = null;
             }
-            if (mWave != null && mWave.IsLoadComplete) {
+            if (null != mWave) {
                 mWave.Close();
                 mWave = null;
             }
+            IsRiffWave = false;
         }
     }
 }

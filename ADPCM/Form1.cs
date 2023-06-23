@@ -55,6 +55,7 @@ namespace ADPCM {
         private void btnEncode_Click(object sender, EventArgs e) {
             var dir = Path.GetDirectoryName(Text);
             var fileName = Path.GetFileNameWithoutExtension(Text);
+            stop();
             if (!ADPCM2.EncodeFile(Text, dir + "\\" + fileName + ".bin", (ADPCM2.TYPE)numBit.Value, 16)) {
                 ADPCM2.DecodeFile(Text, dir + "\\" + fileName + "_decode.wav");
             }
@@ -99,7 +100,7 @@ namespace ADPCM {
             if (null == mWave) {
                 return;
             }
-            mWave.Channels = (int)numChannels.Value;
+            mWave.VagChannels = (int)numChannels.Value;
             setPos();
         }
 
@@ -206,7 +207,8 @@ namespace ADPCM {
                 mWave.Dispose();
             }
             mWave = new WaveOut(Text, (int)numSampleRate.Value, (int)numPackingSize.Value << 4, (int)numBit.Value);
-            mWave.Channels = (int)numChannels.Value;
+            mWave.VagChannels = (int)numChannels.Value;
+            numSampleRate.Value = mWave.SampleRate;
             var len = mWave.FileSize / mWave.PackingSize;
             var div = 100;
             if (0 == len) {

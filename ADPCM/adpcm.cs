@@ -181,14 +181,14 @@ class ADPCM2 {
 		bw.Write(wav.SampleRate);
 		bw.Write((byte)wav.Channels);
 		bw.Write((byte)type);
-        bw.Write((ushort)packes);
+		bw.Write((ushort)packes);
 
-        switch (wav.Channels) {
+		switch (wav.Channels) {
 		case 1: {
 			var adpcm = new ADPCM2(packes, type);
 			var input = new short[adpcm.Samples];
 			var output = new byte[adpcm.PackBytes];
-            wav.AllocateBuffer(adpcm.Samples);
+			wav.AllocateBuffer(adpcm.Samples);
 			for (int i = 0; i < wav.Samples; i += adpcm.Samples) {
 				wav.SetBufferInt(input);
 				adpcm.Encode(input, output);
@@ -203,7 +203,7 @@ class ADPCM2 {
 			var inputR = new short[adpcmR.Samples];
 			var outputL = new byte[adpcmL.PackBytes];
 			var outputR = new byte[adpcmR.PackBytes];
-            wav.AllocateBuffer(adpcmL.Samples);
+			wav.AllocateBuffer(adpcmL.Samples);
 			for (int i = 0; i < wav.Samples; i += adpcmL.Samples) {
 				wav.SetBufferInt(inputL, inputR);
 				adpcmL.Encode(inputL, outputL);
@@ -226,9 +226,9 @@ class ADPCM2 {
 		var channels = br.ReadByte();
 		var type = (TYPE)br.ReadByte();
 		var packes = br.ReadUInt16();
-        var wav = new RiffWave(
+		var wav = new RiffWave(
 			outputPath,
-			2==channels ? RiffWave.TYPE.INT16_CH2 : RiffWave.TYPE.INT16_CH1,
+			2 == channels ? RiffWave.TYPE.INT16_CH2 : RiffWave.TYPE.INT16_CH1,
 			sampleRate
 		);
 
