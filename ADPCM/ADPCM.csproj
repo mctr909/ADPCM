@@ -59,6 +59,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Riff.cs" />
+    <Compile Include="RiffAdpcm.cs" />
     <Compile Include="RiffWave.cs" />
     <Compile Include="Trackbar.cs">
       <SubType>UserControl</SubType>
