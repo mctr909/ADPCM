@@ -73,7 +73,7 @@ namespace ADPCM {
             } else {
                 trackbar1.Value = mWave.Position / mWave.PackingSize;
             }
-            if (mWave.FileSize <= mWave.Position) {
+            if (mWave.DataSize <= mWave.Position) {
                 var itemIndex = listBox1.SelectedIndex;
                 if (itemIndex < 0) {
                     mWave.Position = 0;
@@ -128,11 +128,9 @@ namespace ADPCM {
             if (null == mWave) {
                 return;
             }
-            var pos = mWave.Sample;
             load();
             if ("一時停止" == btnPlay.Text) {
                 play();
-                mWave.Sample = pos;
             }
         }
 
@@ -210,7 +208,7 @@ namespace ADPCM {
             }
             mWave = new WaveOut(Text, (int)numSampleRate.Value, (int)numPackingSize.Value << 4, (int)numBit.Value);
             mWave.VagChannels = (int)numChannels.Value;
-            var len = mWave.FileSize / mWave.PackingSize;
+            var len = mWave.DataSize / mWave.PackingSize;
             var div = 100;
             if (0 == len) {
                 len = 1;
@@ -229,6 +227,15 @@ namespace ADPCM {
                 numSampleRate.Enabled = false;
                 numChannels.Enabled = false;
                 numBit.Enabled = true;
+                btnApply.Enabled = false;
+            } else if (mWave.IsRiffAdpcm) {
+                numPackingSize.Value = mWave.PackingSize;
+                numSampleRate.Value = mWave.SampleRate;
+                numChannels.Value = mWave.Channels;
+                numPackingSize.Enabled = false;
+                numSampleRate.Enabled = false;
+                numChannels.Enabled = false;
+                numBit.Enabled = false;
                 btnApply.Enabled = false;
             } else {
                 numPackingSize.Value = 128;

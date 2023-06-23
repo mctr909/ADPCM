@@ -8,6 +8,7 @@ namespace ADPCM {
 
         FileStream mFs;
         RiffWave mWave;
+        RiffAdpcm mAdpcm;
         VAG mVagL = new VAG();
         VAG mVagR = new VAG();
         ADPCM2 mAdpcmL;
@@ -34,10 +35,12 @@ namespace ADPCM {
 
         public int VagChannels = 2;
 
-        public long FileSize {
+        public long DataSize {
             get {
                 if (IsRiffWave) {
-                    return mWave.Length;
+                    return mWave.DataSize;
+                } else if (IsRiffAdpcm) {
+                    return mAdpcm.DataSize;
                 } else if (null != mFs) {
                     return mFs.Length;
                 } else {
@@ -48,7 +51,9 @@ namespace ADPCM {
         public long Position {
             get {
                 if (IsRiffWave) {
-                    return mWave.Position;
+                    return mWave.DataPosition;
+                } else if (IsRiffAdpcm) {
+                    return mAdpcm.DataPosition;
                 } else if (null != mFs) {
                     return mFs.Position;
                 } else {
@@ -57,26 +62,9 @@ namespace ADPCM {
             }
             set {
                 if (IsRiffWave) {
-                    mWave.Position = value;
-                } else if (null != mFs) {
-                    mFs.Position = value;
-                }
-                mPosition = value;
-            }
-        }
-        public int Sample {
-            get {
-                if (IsRiffWave) {
-                    return (int)(mWave.Position / mWave.SamplePerBytes);
-                } else if (null != mFs) {
-                    return (int)mFs.Position;
-                } else {
-                    return 0;
-                }
-            }
-            set {
-                if (IsRiffWave) {
-                    mWave.Position = value * mWave.SamplePerBytes;
+                    mWave.DataPosition = value;
+                } else if (IsRiffAdpcm) {
+                    mAdpcm.DataPosition = value;
                 } else if (null != mFs) {
                     mFs.Position = value;
                 }
@@ -84,6 +72,7 @@ namespace ADPCM {
             }
         }
         public bool IsRiffWave { get; private set; } = false;
+        public bool IsRiffAdpcm { get; private set; } = false;
 
         public int PackingSize { get { return mPackingSize; } }
 
@@ -101,7 +90,6 @@ namespace ADPCM {
                 mEncL = new byte[mAdpcmL.PackBytes];
                 mEncR = new byte[mAdpcmR.PackBytes];
                 mBufferSamples = mAdpcmL.Samples;
-                mPackingSize = mBufferSamples * mWave.SamplePerBytes;
                 mWave.AllocateBuffer(mBufferSamples);
                 switch (mWave.Tag) {
                 case RiffWave.TAG.INT:
@@ -127,10 +115,25 @@ namespace ADPCM {
                     }
                     break;
                 }
+                mPosition = mWave.DataPosition;
+                mPackingSize = mBufferSamples * mWave.SamplePerBytes;
                 mBuffL = new short[mBufferSamples];
                 mBuffR = new short[mBufferSamples];
-                mPosition = mWave.Position;
                 Setup(mWave.SampleRate, mWave.Channels, mPackingSize);
+            } else if (IsRiffAdpcm) {
+                switch (mAdpcm.Channels) {
+                case 1:
+                    mLoader = loadAdpcmMono;
+                    break;
+                case 2:
+                    mLoader = loadAdpcmStereo;
+                    break;
+                }
+                mPosition = mAdpcm.DataPosition;
+                mPackingSize = mAdpcm.PackBytes;
+                mBuffL = new short[mBufferSamples];
+                mBuffR = new short[mBufferSamples];
+                Setup(mAdpcm.SampleRate, mAdpcm.Channels, mBufferSamples * mAdpcm.Channels * 2);
             } else {
                 mLoader = loadVAG;
                 mPosition = 0;
@@ -160,7 +163,9 @@ namespace ADPCM {
             }
             openFile();
             if (IsRiffWave) {
-                mWave.Position = mPosition;
+                mWave.DataPosition = mPosition;
+            } else if (IsRiffAdpcm) {
+                mWave.DataPosition = mPosition;
             } else {
                 mFs.Position = mPosition;
             }
@@ -211,12 +216,29 @@ namespace ADPCM {
                 mFs.Position += mPackingSize;
                 mPosition += mPackingSize;
             }
-            if (FileSize <= Position) {
+            if (DataSize <= Position) {
                 mStopped = true;
             }
             mLoadSamples = VAG.PACKING_SAMPLES * mPackingSize >> 4;
         }
-        
+
+        void loadAdpcmStereo() {
+            mAdpcm.SetBufferCh2(mBuffL, mBuffR);
+            mLoadSamples = mBuffL.Length;
+            mPosition += mAdpcm.PackBytes;
+            if (DataSize <= Position) {
+                mStopped = true;
+            }
+        }
+        void loadAdpcmMono() {
+            mAdpcm.SetBufferCh1(mBuffL);
+            mLoadSamples = mBuffL.Length;
+            mPosition += mAdpcm.PackBytes;
+            if (DataSize <= Position) {
+                mStopped = true;
+            }
+        }
+
         void loadIntStereo() {
             mWave.SetBufferInt(mBuffL, mBuffR);
             mAdpcmL.Encode(mBuffL, mEncL);
@@ -225,7 +247,7 @@ namespace ADPCM {
             mPcmR.Decode(mBuffR, mEncR);
             mLoadSamples = mBuffL.Length;
             mPosition += mLoadSamples * mWave.SamplePerBytes;
-            if (FileSize <= Position) {
+            if (DataSize <= Position) {
                 mStopped = true;
             }
         }
@@ -235,7 +257,7 @@ namespace ADPCM {
             mPcmL.Decode(mBuffL, mEncL);
             mLoadSamples = mBuffL.Length;
             mPosition += mLoadSamples * mWave.SamplePerBytes;
-            if (FileSize <= Position) {
+            if (DataSize <= Position) {
                 mStopped = true;
             }
         }
@@ -265,7 +287,7 @@ namespace ADPCM {
             mPcmR.Decode(mBuffR, mEncR);
             mLoadSamples = mBuffL.Length;
             mPosition += mLoadSamples * mWave.SamplePerBytes;
-            if (FileSize <= Position) {
+            if (DataSize <= Position) {
                 mStopped = true;
             }
         }
@@ -285,7 +307,7 @@ namespace ADPCM {
             mPcmL.Decode(mBuffL, mEncL);
             mLoadSamples = mBuffL.Length;
             mPosition += mLoadSamples * mWave.SamplePerBytes;
-            if (FileSize <= Position) {
+            if (DataSize <= Position) {
                 mStopped = true;
             }
         }
@@ -297,8 +319,14 @@ namespace ADPCM {
                 mWave.AllocateBuffer(mBufferSamples);
                 IsRiffWave = true;
             } else {
-                mFs = new FileStream(mFilePath, FileMode.Open);
-                mBufferSamples = (mPackingSize < 128 ? 128 : mPackingSize) * VAG.PACKING_SAMPLES * 2 >> 4;
+                mAdpcm = new RiffAdpcm(mFilePath);
+                if (mAdpcm.IsLoadComplete) {
+                    IsRiffAdpcm = true;
+                    mBufferSamples = mAdpcm.PackSamples;
+                } else {
+                    mFs = new FileStream(mFilePath, FileMode.Open);
+                    mBufferSamples = (mPackingSize < 128 ? 128 : mPackingSize) * VAG.PACKING_SAMPLES * 2 >> 4;
+                }
             }
         }
         void closeFile() {
@@ -311,7 +339,12 @@ namespace ADPCM {
                 mWave.Close();
                 mWave = null;
             }
+            if (null != mAdpcm) {
+                mAdpcm.Close();
+                mAdpcm = null;
+            }
             IsRiffWave = false;
+            IsRiffAdpcm = false;
         }
     }
 }

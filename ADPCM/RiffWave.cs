@@ -31,6 +31,15 @@ class RiffWave : RiffFile {
     public int SamplePerBytes { get { return Bits * Channels >> 3; } }
 
     public int Samples { get; private set; } = 0;
+    public long DataSize { get { return mFs.Length - mPosData; } }
+    public long DataPosition {
+        get {
+            return mFs.Position - mPosData;
+        }
+        set {
+            mFs.Position += value + mPosData;
+        }
+    }
 
     long mPosData = 0;
     long mSizeData = 0;

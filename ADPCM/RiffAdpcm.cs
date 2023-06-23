@@ -14,6 +14,17 @@ class RiffAdpcm : RiffFile {
     public int Channels { get; private set; }
     public int Packes { get; private set; }
     public int PackSamples { get { return mAdpcmL.Samples; } }
+    public int PackBytes { get { return mAdpcmL.PackBytes * Channels; } }
+    public long DataSize { get { return mFs.Length - mPosData; } }
+    public long DataPosition {
+        get {
+            return mFs.Position - mPosData;
+        }
+        set {
+            mFs.Position += value + mPosData;
+        }
+    }
+
     public ADPCM2.TYPE Type { get; private set; }
 
     public RiffAdpcm(string inputPath) : base(inputPath) {
