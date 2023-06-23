@@ -18,8 +18,13 @@ class RiffWave : RiffFile {
         FLOAT64_CH1 = 0x034001,
         FLOAT64_CH2 = 0x034002
     }
+    public enum TAG {
+        INT = 1,
+        FLOAT = 3
+    }
 
     public TYPE Type { get; private set; }
+    public TAG Tag { get; private set; }
     public int SampleRate { get; private set; }
     public int Channels { get; private set; }
     public int Bits { get; private set; }
@@ -40,6 +45,7 @@ class RiffWave : RiffFile {
         Type = type;
         Channels = (int)type & 0xFF;
         Bits = ((int)type & 0xFF00) >> 8;
+        Tag = (TAG)(((int)type & 0xFF0000) >> 16);
         SampleRate = sampleRate;
 
         /*** Setting the writing function ***/
@@ -157,7 +163,7 @@ class RiffWave : RiffFile {
         var br = new BinaryReader(mFs);
         /*** Load fmt ***/
         mFs.Position = mPosFmt;
-        var tag = br.ReadUInt16();
+        Tag = (TAG)br.ReadUInt16();
         Channels = br.ReadUInt16();
         SampleRate = br.ReadInt32();
         br.ReadInt32();
@@ -165,7 +171,7 @@ class RiffWave : RiffFile {
         Bits = br.ReadUInt16();
 
         /*** Check format ***/
-        Type = (TYPE)(tag << 16 | Bits << 8 | Channels);
+        Type = (TYPE)((int)Tag << 16 | Bits << 8 | Channels);
         IsLoadComplete = Enum.IsDefined(typeof(TYPE), Type);
         if (!IsLoadComplete) {
             return;

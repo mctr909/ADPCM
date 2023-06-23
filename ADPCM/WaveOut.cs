@@ -21,6 +21,8 @@ namespace ADPCM {
         long mPosition = 0;
         short[] mBuffL;
         short[] mBuffR;
+        double[] mBuffFL;
+        double[] mBuffFR;
         byte[] mEncL;
         byte[] mEncR;
 
@@ -100,17 +102,33 @@ namespace ADPCM {
                 mBufferSamples = mAdpcmL.Samples;
                 mPackingSize = mBufferSamples * mWave.SamplePerBytes;
                 mWave.AllocateBuffer(mBufferSamples);
-                switch (mWave.Channels) {
-                case 1:
-                    mLoader = loadPCMMono;
+                switch (mWave.Tag) {
+                case RiffWave.TAG.INT:
+                    switch (mWave.Channels) {
+                    case 1:
+                        mLoader = loadIntMono;
+                        break;
+                    case 2:
+                        mLoader = loadIntStereo;
+                        break;
+                    }
                     break;
-                case 2:
-                    mLoader = loadPCMStereo;
+                case RiffWave.TAG.FLOAT:
+                    mBuffFL = new double[mBufferSamples];
+                    mBuffFR = new double[mBufferSamples];
+                    switch (mWave.Channels) {
+                    case 1:
+                        mLoader = loadFloatMono;
+                        break;
+                    case 2:
+                        mLoader = loadFloatStereo;
+                        break;
+                    }
                     break;
                 }
-                mPosition = mWave.Position;
                 mBuffL = new short[mBufferSamples];
                 mBuffR = new short[mBufferSamples];
+                mPosition = mWave.Position;
                 Setup(mWave.SampleRate, 2, mPackingSize);
             } else {
                 mLoader = loadVAG;
@@ -196,7 +214,8 @@ namespace ADPCM {
             }
             mLoadSamples = VAG.PACKING_SAMPLES * mPackingSize >> 4;
         }
-        void loadPCMStereo() {
+        
+        void loadIntStereo() {
             mWave.SetBufferInt(mBuffL, mBuffR);
             mAdpcmL.Encode(mBuffL, mEncL);
             mAdpcmR.Encode(mBuffR, mEncR);
@@ -208,8 +227,59 @@ namespace ADPCM {
                 mStopped = true;
             }
         }
-        void loadPCMMono() {
+        void loadIntMono() {
             mWave.SetBufferInt(mBuffL);
+            mAdpcmL.Encode(mBuffL, mEncL);
+            mPcmL.Decode(mBuffL, mEncL);
+            Array.Copy(mBuffL, 0, mBuffR, 0, mBuffR.Length);
+            mLoadSamples = mBuffL.Length;
+            mPosition += mLoadSamples * mWave.SamplePerBytes;
+            if (FileSize <= Position) {
+                mStopped = true;
+            }
+        }
+        void loadFloatStereo() {
+            mWave.SetBufferFloat(mBuffFL, mBuffFR);
+            for(int i=0; i< mBuffFL.Length; i++) {
+                var l = mBuffFL[i];
+                var r = mBuffFR[i];
+                if (l < -1.0) {
+                    l = -1.0;
+                }
+                if (1.0 < l) {
+                    l = 1.0;
+                }
+                if (r < -1.0) {
+                    r = -1.0;
+                }
+                if (1.0 < r) {
+                    r = 1.0;
+                }
+                mBuffL[i] = (short)(l * 32767);
+                mBuffR[i] = (short)(r * 32767);
+            }
+            mAdpcmL.Encode(mBuffL, mEncL);
+            mAdpcmR.Encode(mBuffR, mEncR);
+            mPcmL.Decode(mBuffL, mEncL);
+            mPcmR.Decode(mBuffR, mEncR);
+            mLoadSamples = mBuffL.Length;
+            mPosition += mLoadSamples * mWave.SamplePerBytes;
+            if (FileSize <= Position) {
+                mStopped = true;
+            }
+        }
+        void loadFloatMono() {
+            mWave.SetBufferFloat(mBuffFL);
+            for (int i = 0; i < mBuffFL.Length; i++) {
+                var l = mBuffFL[i];
+                if (l < -1.0) {
+                    l = -1.0;
+                }
+                if (1.0 < l) {
+                    l = 1.0;
+                }
+                mBuffL[i] = (short)(l * 32767);
+            }
             mAdpcmL.Encode(mBuffL, mEncL);
             mPcmL.Decode(mBuffL, mEncL);
             Array.Copy(mBuffL, 0, mBuffR, 0, mBuffR.Length);
