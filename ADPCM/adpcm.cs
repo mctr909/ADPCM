@@ -190,7 +190,7 @@ class ADPCM2 {
 			var output = new byte[adpcm.PackBytes];
 			wav.AllocateBuffer(adpcm.PackingSamples);
 			for (int i = 0; i < wav.Samples; i += adpcm.PackingSamples) {
-				wav.SetBuffer(input);
+				wav.SetBufferInt(input);
 				adpcm.Encode(input, output);
 				fs.Write(output, 0, adpcm.PackingBytes);
 			}
@@ -205,7 +205,7 @@ class ADPCM2 {
 			var outputR = new byte[adpcmR.PackBytes];
 			wav.AllocateBuffer(adpcmL.PackingSamples);
 			for (int i = 0; i < wav.Samples; i += adpcmL.PackingSamples) {
-				wav.SetBuffer(inputL, inputR);
+				wav.SetBufferInt(inputL, inputR);
 				adpcmL.Encode(inputL, outputL);
 				adpcmR.Encode(inputR, outputR);
 				fs.Write(outputL, 0, adpcmL.PackingBytes);
@@ -240,7 +240,7 @@ class ADPCM2 {
 			while (fs.Position < fs.Length) {
 				fs.Read(input, 0, adpcm.PackingBytes);
 				adpcm.Decode(output, input);
-				wav.Write(output);
+				wav.WriteInt(output);
 			}
 			break;
 		}
@@ -257,7 +257,7 @@ class ADPCM2 {
 				fs.Read(inputR, 0, adpcmR.PackingBytes);
 				adpcmL.Decode(outputL, inputL);
 				adpcmR.Decode(outputR, inputR);
-				wav.Write(outputL, outputR);
+				wav.WriteInt(outputL, outputR);
 			}
 			break;
 		}

@@ -43,54 +43,56 @@ class RiffWave : RiffFile {
         SampleRate = sampleRate;
 
         /*** Setting the writing function ***/
+        WriteInt = WriteIntNop;
+        WriteFloat = WriteFloatNop;
         switch (Type) {
         case TYPE.INT8_CH1:
-            Write = WriteInt8Ch1;
+            WriteInt = WriteInt8Ch1;
             break;
         case TYPE.INT8_CH2:
-            Write = WriteInt8Ch2;
+            WriteInt = WriteInt8Ch2;
             break;
         case TYPE.INT16_CH1:
-            Write = WriteInt16Ch1;
+            WriteInt = WriteInt16Ch1;
             break;
         case TYPE.INT16_CH2:
-            Write = WriteInt16Ch2;
+            WriteInt = WriteInt16Ch2;
             break;
         case TYPE.INT24_CH1:
-            Write = WriteInt24Ch1;
+            WriteInt = WriteInt24Ch1;
             break;
         case TYPE.INT24_CH2:
-            Write = WriteInt24Ch2;
+            WriteInt = WriteInt24Ch2;
             break;
         case TYPE.INT32_CH1:
-            Write = WriteInt32Ch1;
+            WriteInt = WriteInt32Ch1;
             break;
         case TYPE.INT32_CH2:
-            Write = WriteInt32Ch2;
+            WriteInt = WriteInt32Ch2;
             break;
         case TYPE.FLOAT24_CH1:
-            Write = WriteFloat24Ch1;
+            WriteFloat = WriteFloat24Ch1;
             break;
         case TYPE.FLOAT24_CH2:
-            Write = WriteFloat24Ch2;
+            WriteFloat = WriteFloat24Ch2;
             break;
         case TYPE.FLOAT32_CH1:
-            Write = WriteFloat32Ch1;
+            WriteFloat = WriteFloat32Ch1;
             break;
         case TYPE.FLOAT32_CH2:
-            Write = WriteFloat32Ch2;
+            WriteFloat = WriteFloat32Ch2;
             break;
         case TYPE.FLOAT64_CH1:
-            Write = WriteFloat64Ch1;
+            WriteFloat = WriteFloat64Ch1;
             break;
         case TYPE.FLOAT64_CH2:
-            Write = WriteFloat64Ch2;
+            WriteFloat = WriteFloat64Ch2;
             break;
         default:
-            Write = WriteNop;
             break;
         }
-        SetBuffer = SetBufferNop;
+        SetBufferInt = SetBufferIntNop;
+        SetBufferFloat = SetBufferFloatNop;
     }
 
     public RiffWave(string path) : base(path) { }
@@ -177,59 +179,63 @@ class RiffWave : RiffFile {
         mFs.Position = mPosData;
 
         /*** Setting the buffer loading function ***/
+        SetBufferInt = SetBufferIntNop;
+        SetBufferFloat = SetBufferFloatNop;
         switch (Type) {
         case TYPE.INT8_CH1:
-            SetBuffer = SetBufferInt8Ch1;
+            SetBufferInt = SetBufferInt8Ch1;
             break;
         case TYPE.INT8_CH2:
-            SetBuffer = SetBufferInt8Ch2;
+            SetBufferInt = SetBufferInt8Ch2;
             break;
         case TYPE.INT16_CH1:
-            SetBuffer = SetBufferInt16Ch1;
+            SetBufferInt = SetBufferInt16Ch1;
             break;
         case TYPE.INT16_CH2:
-            SetBuffer = SetBufferInt16Ch2;
+            SetBufferInt = SetBufferInt16Ch2;
             break;
         case TYPE.INT24_CH1:
-            SetBuffer = SetBufferInt24Ch1;
+            SetBufferInt = SetBufferInt24Ch1;
             break;
         case TYPE.INT24_CH2:
-            SetBuffer = SetBufferInt24Ch2;
+            SetBufferInt = SetBufferInt24Ch2;
             break;
         case TYPE.INT32_CH1:
-            SetBuffer = SetBufferInt32Ch1;
+            SetBufferInt = SetBufferInt32Ch1;
             break;
         case TYPE.INT32_CH2:
-            SetBuffer = SetBufferInt32Ch2;
+            SetBufferInt = SetBufferInt32Ch2;
             break;
         case TYPE.FLOAT24_CH1:
-            SetBuffer = SetBufferFloat24Ch1;
+            SetBufferFloat = SetBufferFloat24Ch1;
             break;
         case TYPE.FLOAT24_CH2:
-            SetBuffer = SetBufferFloat24Ch2;
+            SetBufferFloat = SetBufferFloat24Ch2;
             break;
         case TYPE.FLOAT32_CH1:
-            SetBuffer = SetBufferFloat32Ch1;
+            SetBufferFloat = SetBufferFloat32Ch1;
             break;
         case TYPE.FLOAT32_CH2:
-            SetBuffer = SetBufferFloat32Ch2;
+            SetBufferFloat = SetBufferFloat32Ch2;
             break;
         case TYPE.FLOAT64_CH1:
-            SetBuffer = SetBufferFloat64Ch1;
+            SetBufferFloat = SetBufferFloat64Ch1;
             break;
         case TYPE.FLOAT64_CH2:
-            SetBuffer = SetBufferFloat64Ch2;
+            SetBufferFloat = SetBufferFloat64Ch2;
             break;
         default:
-            SetBuffer = SetBufferNop;
             break;
         }
-        Write = WriteNop;
+        WriteInt = WriteIntNop;
+        WriteFloat = WriteFloatNop;
     }
 
     public delegate void DSetBuffer(short[] left, short[] right = null);
-    public DSetBuffer SetBuffer;
-    void SetBufferNop(short[] left, short[] right) { }
+    public delegate void DDSetBuffer(double[] left, double[] right = null);
+    public DSetBuffer SetBufferInt;
+    public DDSetBuffer SetBufferFloat;
+    void SetBufferIntNop(short[] left, short[] right) { }
     void SetBufferInt8Ch1(short[] left, short[] right) {
         mFs.Read(mBuffer, 0, mBuffer.Length);
         for (int i = 0; i < left.Length; i++) {
@@ -282,134 +288,74 @@ class RiffWave : RiffFile {
             right[i] = BitConverter.ToInt16(mBuffer, j + 6);
         }
     }
-    void SetBufferFloat24Ch1(short[] left, short[] right) {
+    void SetBufferFloatNop(double[] left, double[] right) { }
+    void SetBufferFloat24Ch1(double[] left, double[] right) {
         mFs.Read(mBuffer, 0, mBuffer.Length);
         m4byte[0] = 0;
         for (int i = 0, j = 0; i < left.Length; i++, j += 3) {
             m4byte[1] = mBuffer[j];
             m4byte[2] = mBuffer[j + 1];
             m4byte[3] = mBuffer[j + 2];
-            var mono = BitConverter.ToSingle(m4byte, 0);
-            if (mono < -1.0f) {
-                mono = -1.0f;
-            }
-            if (1.0f < mono) {
-                mono = 1.0f;
-            }
-            left[i] = (short)(mono * 32767);
+            left[i] = BitConverter.ToSingle(m4byte, 0);
         }
     }
-    void SetBufferFloat24Ch2(short[] left, short[] right) {
+    void SetBufferFloat24Ch2(double[] left, double[] right) {
         mFs.Read(mBuffer, 0, mBuffer.Length);
         m4byte[0] = 0;
         for (int i = 0, j = 0; i < left.Length; i++, j += 6) {
             m4byte[1] = mBuffer[j];
             m4byte[2] = mBuffer[j + 1];
             m4byte[3] = mBuffer[j + 2];
-            var l = BitConverter.ToSingle(m4byte, 0);
+            left[i] = BitConverter.ToSingle(m4byte, 0);
             m4byte[1] = mBuffer[j + 3];
             m4byte[2] = mBuffer[j + 4];
             m4byte[3] = mBuffer[j + 5];
-            var r = BitConverter.ToSingle(m4byte, 0);
-            if (l < -1.0f) {
-                l = -1.0f;
-            }
-            if (1.0f < l) {
-                l = 1.0f;
-            }
-            if (r < -1.0f) {
-                r = -1.0f;
-            }
-            if (1.0f < r) {
-                r = 1.0f;
-            }
-            left[i] = (short)(l * 32767);
-            right[i] = (short)(r * 32767);
+            right[i] = BitConverter.ToSingle(m4byte, 0);
         }
     }
-    void SetBufferFloat32Ch1(short[] left, short[] right) {
+    void SetBufferFloat32Ch1(double[] left, double[] right) {
         mFs.Read(mBuffer, 0, mBuffer.Length);
         for (int i = 0, j = 0; i < left.Length; i++, j += 4) {
-            var mono = BitConverter.ToSingle(mBuffer, j);
-            if (mono < -1.0f) {
-                mono = -1.0f;
-            }
-            if (1.0f < mono) {
-                mono = 1.0f;
-            }
-            left[i] = (short)(mono * 32767);
+            left[i] = BitConverter.ToSingle(mBuffer, j);
         }
     }
-    void SetBufferFloat32Ch2(short[] left, short[] right) {
+    void SetBufferFloat32Ch2(double[] left, double[] right) {
         mFs.Read(mBuffer, 0, mBuffer.Length);
         for (int i = 0, j = 0; i < left.Length; i++, j += 8) {
-            var l = BitConverter.ToSingle(mBuffer, j);
-            var r = BitConverter.ToSingle(mBuffer, j + 4);
-            if (l < -1.0f) {
-                l = -1.0f;
-            }
-            if (1.0f < l) {
-                l = 1.0f;
-            }
-            if (r < -1.0f) {
-                r = -1.0f;
-            }
-            if (1.0f < r) {
-                r = 1.0f;
-            }
-            left[i] = (short)(l * 32767);
-            right[i] = (short)(r * 32767);
+            left[i] = BitConverter.ToSingle(mBuffer, j);
+            right[i] = BitConverter.ToSingle(mBuffer, j + 4);
         }
     }
-    void SetBufferFloat64Ch1(short[] left, short[] right) {
+    void SetBufferFloat64Ch1(double[] left, double[] right) {
         mFs.Read(mBuffer, 0, mBuffer.Length);
         for (int i = 0, j = 0; i < left.Length; i++, j += 8) {
-            var mono = BitConverter.ToDouble(mBuffer, j);
-            if (mono < -1.0) {
-                mono = -1.0;
-            }
-            if (1.0 < mono) {
-                mono = 1.0;
-            }
-            left[i] = (short)(mono * 32767);
+            left[i] = BitConverter.ToDouble(mBuffer, j);
         }
     }
-    void SetBufferFloat64Ch2(short[] left, short[] right) {
+    void SetBufferFloat64Ch2(double[] left, double[] right) {
         mFs.Read(mBuffer, 0, mBuffer.Length);
         for (int i = 0, j = 0; i < left.Length; i++, j += 16) {
-            var l = BitConverter.ToDouble(mBuffer, j);
-            var r = BitConverter.ToDouble(mBuffer, j + 8);
-            if (l < -1.0) {
-                l = -1.0;
-            }
-            if (1.0 < l) {
-                l = 1.0;
-            }
-            if (r < -1.0) {
-                r = -1.0;
-            }
-            if (1.0 < r) {
-                r = 1.0;
-            }
-            left[i] = (short)(l * 32767);
-            right[i] = (short)(r * 32767);
+            left[i] = BitConverter.ToDouble(mBuffer, j);
+            right[i] = BitConverter.ToDouble(mBuffer, j + 8);
         }
     }
 
     public delegate void DWrite(short[] left, short[] right = null);
-    public DWrite Write;
-    void WriteNop(short[] left, short[] right) { }
+    public delegate void DDWrite(double[] left, double[] right = null);
+    public DWrite WriteInt;
+    public DDWrite WriteFloat;
+    void WriteIntNop(short[] left, short[] right) { }
     void WriteInt8Ch1(short[] left, short[] right) {
         for (int i = 0; i < left.Length; i++) {
-            left[i] = (short)((mBuffer[i] - 128) * 256);
+            mBuffer[i] = (byte)((left[i] >> 16) + 128);
         }
         mFs.Write(mBuffer, 0, mBuffer.Length);
         Samples += left.Length;
     }
     void WriteInt8Ch2(short[] left, short[] right) {
         for (int i = 0, j = 0; i < left.Length; i++, j += 2) {
-            left[i] = (short)((mBuffer[j] - 128) * 256);
-            right[i] = (short)((mBuffer[j + 1] - 128) * 256);
+            mBuffer[i] = (byte)((left[i] >> 16) + 128);
+            mBuffer[i + 2] = (byte)((right[i] >> 16) + 128);
         }
         mFs.Write(mBuffer, 0, mBuffer.Length);
         Samples += left.Length;
@@ -459,121 +405,48 @@ class RiffWave : RiffFile {
         mFs.Write(mBuffer, 0, mBuffer.Length);
         Samples += left.Length;
     }
-    void WriteFloat24Ch1(short[] left, short[] right) {
-        m4byte[0] = 0;
+    void WriteFloatNop(double[] left, double[] right) { }
+    void WriteFloat24Ch1(double[] left, double[] right) {
         for (int i = 0, j = 0; i < left.Length; i++, j += 3) {
-            m4byte[1] = mBuffer[j];
-            m4byte[2] = mBuffer[j + 1];
-            m4byte[3] = mBuffer[j + 2];
-            var mono = BitConverter.ToSingle(m4byte, 0);
-            if (mono < -1.0f) {
-                mono = -1.0f;
-            }
-            if (1.0f < mono) {
-                mono = 1.0f;
-            }
-            left[i] = (short)(mono * 32767);
+            Array.Copy(BitConverter.GetBytes((float)left[i]), 0, mBuffer, j, 3);
         }
         mFs.Write(mBuffer, 0, mBuffer.Length);
         Samples += left.Length;
     }
-    void WriteFloat24Ch2(short[] left, short[] right) {
-        m4byte[0] = 0;
+    void WriteFloat24Ch2(double[] left, double[] right) {
         for (int i = 0, j = 0; i < left.Length; i++, j += 6) {
-            m4byte[1] = mBuffer[j];
-            m4byte[2] = mBuffer[j + 1];
-            m4byte[3] = mBuffer[j + 2];
-            var l = BitConverter.ToSingle(m4byte, 0);
-            m4byte[1] = mBuffer[j + 3];
-            m4byte[2] = mBuffer[j + 4];
-            m4byte[3] = mBuffer[j + 5];
-            var r = BitConverter.ToSingle(m4byte, 0);
-            if (l < -1.0f) {
-                l = -1.0f;
-            }
-            if (1.0f < l) {
-                l = 1.0f;
-            }
-            if (r < -1.0f) {
-                r = -1.0f;
-            }
-            if (1.0f < r) {
-                r = 1.0f;
-            }
-            left[i] = (short)(l * 32767);
-            right[i] = (short)(r * 32767);
+            Array.Copy(BitConverter.GetBytes((float)left[i]), 0, mBuffer, j, 3);
+            Array.Copy(BitConverter.GetBytes((float)right[i]), 0, mBuffer, j + 3, 3);
         }
         mFs.Write(mBuffer, 0, mBuffer.Length);
         Samples += left.Length;
     }
-    void WriteFloat32Ch1(short[] left, short[] right) {
+    void WriteFloat32Ch1(double[] left, double[] right) {
         for (int i = 0, j = 0; i < left.Length; i++, j += 4) {
-            var mono = BitConverter.ToSingle(mBuffer, j);
-            if (mono < -1.0f) {
-                mono = -1.0f;
-            }
-            if (1.0f < mono) {
-                mono = 1.0f;
-            }
-            left[i] = (short)(mono * 32767);
+            Array.Copy(BitConverter.GetBytes((float)left[i]), 0, mBuffer, j, 4);
         }
         mFs.Write(mBuffer, 0, mBuffer.Length);
         Samples += left.Length;
     }
-    void WriteFloat32Ch2(short[] left, short[] right) {
+    void WriteFloat32Ch2(double[] left, double[] right) {
         for (int i = 0, j = 0; i < left.Length; i++, j += 8) {
-            var l = BitConverter.ToSingle(mBuffer, j);
-            var r = BitConverter.ToSingle(mBuffer, j + 4);
-            if (l < -1.0f) {
-                l = -1.0f;
-            }
-            if (1.0f < l) {
-                l = 1.0f;
-            }
-            if (r < -1.0f) {
-                r = -1.0f;
-            }
-            if (1.0f < r) {
-                r = 1.0f;
-            }
-            left[i] = (short)(l * 32767);
-            right[i] = (short)(r * 32767);
+            Array.Copy(BitConverter.GetBytes((float)left[i]), 0, mBuffer, j, 4);
+            Array.Copy(BitConverter.GetBytes((float)right[i]), 0, mBuffer, j + 4, 4);
         }
         mFs.Write(mBuffer, 0, mBuffer.Length);
         Samples += left.Length;
     }
-    void WriteFloat64Ch1(short[] left, short[] right) {
+    void WriteFloat64Ch1(double[] left, double[] right) {
         for (int i = 0, j = 0; i < left.Length; i++, j += 8) {
-            var mono = BitConverter.ToDouble(mBuffer, j);
-            if (mono < -1.0) {
-                mono = -1.0;
-            }
-            if (1.0 < mono) {
-                mono = 1.0;
-            }
-            left[i] = (short)(mono * 32767);
+            Array.Copy(BitConverter.GetBytes(left[i]), 0, mBuffer, j, 8);
         }
         mFs.Write(mBuffer, 0, mBuffer.Length);
         Samples += left.Length;
     }
-    void WriteFloat64Ch2(short[] left, short[] right) {
+    void WriteFloat64Ch2(double[] left, double[] right) {
         for (int i = 0, j = 0; i < left.Length; i++, j += 16) {
-            var l = BitConverter.ToDouble(mBuffer, j);
-            var r = BitConverter.ToDouble(mBuffer, j + 8);
-            if (l < -1.0) {
-                l = -1.0;
-            }
-            if (1.0 < l) {
-                l = 1.0;
-            }
-            if (r < -1.0) {
-                r = -1.0;
-            }
-            if (1.0 < r) {
-                r = 1.0;
-            }
-            left[i] = (short)(l * 32767);
-            right[i] = (short)(r * 32767);
+            Array.Copy(BitConverter.GetBytes(left[i]), 0, mBuffer, j, 8);
+            Array.Copy(BitConverter.GetBytes(right[i]), 0, mBuffer, j + 8, 8);
         }
         mFs.Write(mBuffer, 0, mBuffer.Length);
         Samples += left.Length;

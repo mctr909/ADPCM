@@ -197,7 +197,7 @@ namespace ADPCM {
             mLoadSamples = VAG.PACKING_SAMPLES * mPackingSize >> 4;
         }
         void loadPCMStereo() {
-            mWave.SetBuffer(mBuffL, mBuffR);
+            mWave.SetBufferInt(mBuffL, mBuffR);
             mAdpcmL.Encode(mBuffL, mEncL);
             mAdpcmR.Encode(mBuffR, mEncR);
             mPcmL.Decode(mBuffL, mEncL);
@@ -209,7 +209,7 @@ namespace ADPCM {
             }
         }
         void loadPCMMono() {
-            mWave.SetBuffer(mBuffL);
+            mWave.SetBufferInt(mBuffL);
             mAdpcmL.Encode(mBuffL, mEncL);
             mPcmL.Decode(mBuffL, mEncL);
             Array.Copy(mBuffL, 0, mBuffR, 0, mBuffR.Length);
