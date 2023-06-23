@@ -208,7 +208,6 @@ namespace ADPCM {
             }
             mWave = new WaveOut(Text, (int)numSampleRate.Value, (int)numPackingSize.Value << 4, (int)numBit.Value);
             mWave.VagChannels = (int)numChannels.Value;
-            numSampleRate.Value = mWave.SampleRate;
             var len = mWave.FileSize / mWave.PackingSize;
             var div = 100;
             if (0 == len) {
@@ -220,6 +219,23 @@ namespace ADPCM {
             trackbar1.MaxValue = len;
             trackbar1.MinorTickFreq = len / div;
             trackbar1.MajorTickFreq = trackbar1.MinorTickFreq * 10;
+            if (mWave.IsRiffWave) {
+                numPackingSize.Value = mWave.PackingSize;
+                numSampleRate.Value = mWave.SampleRate;
+                numChannels.Value = mWave.Channels;
+                numPackingSize.Enabled = false;
+                numSampleRate.Enabled = false;
+                numChannels.Enabled = false;
+                numBit.Enabled = true;
+                btnApply.Enabled = false;
+            } else {
+                numPackingSize.Value = 128;
+                numPackingSize.Enabled = true;
+                numSampleRate.Enabled = true;
+                numChannels.Enabled = true;
+                numBit.Enabled = false;
+                btnApply.Enabled = true;
+            }
         }
     }
 }

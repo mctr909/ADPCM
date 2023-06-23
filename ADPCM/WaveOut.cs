@@ -94,10 +94,10 @@ namespace ADPCM {
             openFile();
 
             if (IsRiffWave) {
-                mAdpcmL = new ADPCM2(24, (ADPCM2.TYPE)bits);
-                mAdpcmR = new ADPCM2(24, (ADPCM2.TYPE)bits);
-                mPcmL = new ADPCM2(24, (ADPCM2.TYPE)bits);
-                mPcmR = new ADPCM2(24, (ADPCM2.TYPE)bits);
+                mAdpcmL = new ADPCM2(16, (ADPCM2.TYPE)bits);
+                mAdpcmR = new ADPCM2(16, (ADPCM2.TYPE)bits);
+                mPcmL = new ADPCM2(16, (ADPCM2.TYPE)bits);
+                mPcmR = new ADPCM2(16, (ADPCM2.TYPE)bits);
                 mEncL = new byte[mAdpcmL.PackBytes];
                 mEncR = new byte[mAdpcmR.PackBytes];
                 mBufferSamples = mAdpcmL.Samples;
@@ -130,7 +130,7 @@ namespace ADPCM {
                 mBuffL = new short[mBufferSamples];
                 mBuffR = new short[mBufferSamples];
                 mPosition = mWave.Position;
-                Setup(mWave.SampleRate, 2, mPackingSize);
+                Setup(mWave.SampleRate, mWave.Channels, mPackingSize);
             } else {
                 mLoader = loadVAG;
                 mPosition = 0;
@@ -233,7 +233,6 @@ namespace ADPCM {
             mWave.SetBufferInt(mBuffL);
             mAdpcmL.Encode(mBuffL, mEncL);
             mPcmL.Decode(mBuffL, mEncL);
-            Array.Copy(mBuffL, 0, mBuffR, 0, mBuffR.Length);
             mLoadSamples = mBuffL.Length;
             mPosition += mLoadSamples * mWave.SamplePerBytes;
             if (FileSize <= Position) {
@@ -284,7 +283,6 @@ namespace ADPCM {
             }
             mAdpcmL.Encode(mBuffL, mEncL);
             mPcmL.Decode(mBuffL, mEncL);
-            Array.Copy(mBuffL, 0, mBuffR, 0, mBuffR.Length);
             mLoadSamples = mBuffL.Length;
             mPosition += mLoadSamples * mWave.SamplePerBytes;
             if (FileSize <= Position) {
