@@ -33,12 +33,8 @@ class RiffWave : RiffFile {
     public int Samples { get; private set; } = 0;
     public long DataSize { get { return mFs.Length - mPosData; } }
     public long DataPosition {
-        get {
-            return mFs.Position - mPosData;
-        }
-        set {
-            mFs.Position += value + mPosData;
-        }
+        get { return mFs.Position - mPosData; }
+        set { mFs.Position += value + mPosData; }
     }
 
     long mPosData = 0;

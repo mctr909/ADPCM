@@ -51,9 +51,9 @@ namespace ADPCM {
             // 
             // btnPlay
             // 
-            this.btnPlay.Location = new System.Drawing.Point(12, 24);
+            this.btnPlay.Location = new System.Drawing.Point(12, 9);
             this.btnPlay.Name = "btnPlay";
-            this.btnPlay.Size = new System.Drawing.Size(75, 23);
+            this.btnPlay.Size = new System.Drawing.Size(75, 38);
             this.btnPlay.TabIndex = 2;
             this.btnPlay.Text = "再生";
             this.btnPlay.UseVisualStyleBackColor = true;
@@ -166,9 +166,9 @@ namespace ADPCM {
             // 
             // btnApply
             // 
-            this.btnApply.Location = new System.Drawing.Point(271, 24);
+            this.btnApply.Location = new System.Drawing.Point(271, 9);
             this.btnApply.Name = "btnApply";
-            this.btnApply.Size = new System.Drawing.Size(48, 23);
+            this.btnApply.Size = new System.Drawing.Size(48, 38);
             this.btnApply.TabIndex = 9;
             this.btnApply.Text = "反映";
             this.btnApply.UseVisualStyleBackColor = true;

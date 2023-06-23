@@ -50,10 +50,8 @@ namespace ADPCM {
         }
         public long Position {
             get {
-                if (IsRiffWave) {
-                    return mWave.DataPosition;
-                } else if (IsRiffAdpcm) {
-                    return mAdpcm.DataPosition;
+                if (IsRiffWave || IsRiffAdpcm) {
+                    return mPosition;
                 } else if (null != mFs) {
                     return mFs.Position;
                 } else {
@@ -75,6 +73,17 @@ namespace ADPCM {
         public bool IsRiffAdpcm { get; private set; } = false;
 
         public int PackingSize { get { return mPackingSize; } }
+        public int Bits {
+            get {
+                if (IsRiffWave) {
+                    return mWave.Bits;
+                } else if (IsRiffAdpcm) {
+                    return (int)mAdpcm.Type;
+                } else {
+                    return 4;
+                }
+            }
+        }
 
         public WaveOut(string filePath, int sampleRate, int packingSize = 0x800, int bits = 4) {
             mFilePath = filePath;
@@ -165,7 +174,7 @@ namespace ADPCM {
             if (IsRiffWave) {
                 mWave.DataPosition = mPosition;
             } else if (IsRiffAdpcm) {
-                mWave.DataPosition = mPosition;
+                mAdpcm.DataPosition = mPosition;
             } else {
                 mFs.Position = mPosition;
             }

@@ -232,6 +232,7 @@ namespace ADPCM {
                 numPackingSize.Value = mWave.PackingSize;
                 numSampleRate.Value = mWave.SampleRate;
                 numChannels.Value = mWave.Channels;
+                numBit.Value = mWave.Bits;
                 numPackingSize.Enabled = false;
                 numSampleRate.Enabled = false;
                 numChannels.Enabled = false;

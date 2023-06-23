@@ -17,12 +17,8 @@ class RiffAdpcm : RiffFile {
     public int PackBytes { get { return mAdpcmL.PackBytes * Channels; } }
     public long DataSize { get { return mFs.Length - mPosData; } }
     public long DataPosition {
-        get {
-            return mFs.Position - mPosData;
-        }
-        set {
-            mFs.Position += value + mPosData;
-        }
+        get { return mFs.Position - mPosData; }
+        set { mFs.Position += value + mPosData; }
     }
 
     public ADPCM2.TYPE Type { get; private set; }
