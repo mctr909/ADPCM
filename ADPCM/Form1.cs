@@ -58,7 +58,16 @@ namespace ADPCM {
             stop();
             if (!RiffAdpcm.EncodeFile(Text, dir + "\\" + fileName + ".bin", (ADPCM2.TYPE)numBit.Value, 16)) {
                 var dec = new RiffAdpcm(Text);
-                dec.DecodeFile(dir + "\\" + fileName + "_decode.wav");
+                if (dec.IsLoadComplete) {
+                    dec.DecodeFile(dir + "\\" + fileName + "_decode.wav");
+                } else {
+                    VAG.DecodeFile(Text, dir + "\\" + fileName + "_decode.wav",
+                        0,
+                        (int)numSampleRate.Value,
+                        (int)numPackingSize.Value,
+                        (int)numChannels.Value
+                    );
+                }
                 dec.Close();
             }
         }

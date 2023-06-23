@@ -36,7 +36,7 @@ class VAG {
     double mS2 = 0.0;
     double[,] mPredictBuf = new double[PACKING_SAMPLES, 5];
 
-    public void Enc(short[] pcmData) {
+    public void Encode(short[] pcmData) {
         int predict = 0;
         double min = 1e10;
         double f1 = 0.0;
@@ -116,7 +116,7 @@ class VAG {
         EncBuf[0] = (byte)(((predict << 4) & 0xF0) | (shift & 0x0F));
     }
 
-    public void Dec(byte[] vagData) {
+    public void Decode(byte[] vagData) {
         var shift = vagData[0] & 0xF;
         var predict = (vagData[0] & 0xF0) >> 4;
         if (4 < predict) {
@@ -142,5 +142,9 @@ class VAG {
             DecBuf[i] = (short)out1;
             DecBuf[i + 1] = (short)out2;
         }
+    }
+
+    public static void DecodeFile(string inputPath, string outputPath, int offset, int sampleRate, int packSize, int channels) {
+        /// TODO: decode vag
     }
 }
