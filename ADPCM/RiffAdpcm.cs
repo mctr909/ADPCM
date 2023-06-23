@@ -1,8 +1,20 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 class RiffAdpcm : RiffFile {
     long mPosFmt;
     long mPosData;
+
+    ADPCM2 mAdpcmL;
+    ADPCM2 mAdpcmR;
+    byte[] mEncL;
+    byte[] mEncR;
+
+    public int SampleRate { get; private set; }
+    public int Channels { get; private set; }
+    public int Packes { get; private set; }
+    public int PackSamples { get { return mAdpcmL.Samples; } }
+    public ADPCM2.TYPE Type { get; private set; }
 
     public RiffAdpcm(string inputPath) : base(inputPath) {
         if (IsLoadComplete) {
@@ -30,6 +42,44 @@ class RiffAdpcm : RiffFile {
         return false;
     }
 
+    protected override void LoadComplete() {
+        var br = new BinaryReader(mFs);
+
+        /*** Load fmt ***/
+        mFs.Position = mPosFmt;
+        var tag = br.ReadUInt16();
+        Channels = br.ReadUInt16();
+        SampleRate = br.ReadInt32();
+        var bytesPerSec = br.ReadUInt32();
+        Packes = br.ReadUInt16();
+        Type = (ADPCM2.TYPE)br.ReadUInt16();
+
+        /*** Check format ***/
+        IsLoadComplete = 0 == tag && Enum.IsDefined(typeof(ADPCM2.TYPE), Type);
+        if (!IsLoadComplete) {
+            Close();
+            return;
+        }
+
+        mFs.Position = mPosData;
+        mAdpcmL = new ADPCM2(Packes, Type);
+        mAdpcmR = new ADPCM2(Packes, Type);
+        mEncL = new byte[mAdpcmL.PackBytes];
+        mEncR = new byte[mAdpcmR.PackBytes];
+    }
+
+    public void SetBufferCh1(short[] mono) {
+        mFs.Read(mEncL, 0, mEncL.Length);
+        mAdpcmL.Decode(mono, mEncL);
+    }
+
+    public void SetBufferCh2(short[] left, short[] right) {
+        mFs.Read(mEncL, 0, mEncL.Length);
+        mFs.Read(mEncR, 0, mEncR.Length);
+        mAdpcmL.Decode(left, mEncL);
+        mAdpcmL.Decode(right, mEncR);
+    }
+
     public void DecodeFile(string outputPath) {
         if (!IsLoadComplete) {
             return;
@@ -37,23 +87,15 @@ class RiffAdpcm : RiffFile {
 
         var br = new BinaryReader(mFs);
 
-        mFs.Position = mPosFmt;
-        var tag = br.ReadUInt16();
-        var channels = br.ReadUInt16();
-        var sampleRate = br.ReadInt32();
-        var bytesPerSec = br.ReadUInt32();
-        var packes = br.ReadUInt16();
-        var type = (ADPCM2.TYPE)br.ReadUInt16();
-
         mFs.Position = mPosData;
         var wav = new RiffWave(
             outputPath,
-            2 == channels ? RiffWave.TYPE.INT16_CH2 : RiffWave.TYPE.INT16_CH1,
-            sampleRate
+            2 == Channels ? RiffWave.TYPE.INT16_CH2 : RiffWave.TYPE.INT16_CH1,
+            SampleRate
         );
         switch (wav.Channels) {
         case 1: {
-            var adpcm = new ADPCM2(packes, type);
+            var adpcm = new ADPCM2(Packes, Type);
             var output = new short[adpcm.Samples];
             var input = new byte[adpcm.PackBytes];
             wav.AllocateBuffer(adpcm.Samples);
@@ -65,8 +107,8 @@ class RiffAdpcm : RiffFile {
             break;
         }
         case 2: {
-            var adpcmL = new ADPCM2(packes, type);
-            var adpcmR = new ADPCM2(packes, type);
+            var adpcmL = new ADPCM2(Packes, Type);
+            var adpcmR = new ADPCM2(Packes, Type);
             var outputL = new short[adpcmL.Samples];
             var outputR = new short[adpcmR.Samples];
             var inputL = new byte[adpcmL.PackBytes];
@@ -83,6 +125,7 @@ class RiffAdpcm : RiffFile {
         }
         }
         wav.Close();
+        mFs.Position = mPosData;
     }
 
     public static bool EncodeFile(string inputPath, string outputPath, ADPCM2.TYPE type, int packes) {
