@@ -57,7 +57,9 @@ namespace ADPCM {
             var fileName = Path.GetFileNameWithoutExtension(Text);
             stop();
             if (!ADPCM2.EncodeFile(Text, dir + "\\" + fileName + ".bin", (ADPCM2.TYPE)numBit.Value, 16)) {
-                ADPCM2.DecodeFile(Text, dir + "\\" + fileName + "_decode.wav");
+                var dec = new ADPCM2(Text);
+                dec.DecodeFile(dir + "\\" + fileName + "_decode.wav");
+                dec.Close();
             }
         }
 
