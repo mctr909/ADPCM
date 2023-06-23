@@ -149,6 +149,7 @@ namespace ADPCM {
             for (int i = 0; i < 50 && !mStopped; i++) {
                 Thread.Sleep(10);
             }
+            mStopped = true;
             closeFile();
         }
 
@@ -291,6 +292,7 @@ namespace ADPCM {
         }
 
         void openFile() {
+            closeFile();
             mWave = new RiffWave(mFilePath);
             if (mWave.IsLoadComplete) {
                 mWave.AllocateBuffer(mBufferSamples);

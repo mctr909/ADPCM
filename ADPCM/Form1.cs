@@ -5,6 +5,7 @@ using System.IO;
 namespace ADPCM {
     public partial class Form1 : Form {
         WaveOut mWave;
+        int mPrevFileIndex = -1;
 
         public Form1() {
             InitializeComponent();
@@ -160,10 +161,15 @@ namespace ADPCM {
         }
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e) {
-            var itemIndex = listBox1.SelectedIndex;
-            if (itemIndex < 0) {
+            if (listBox1.SelectedIndex < 0) {
+                mPrevFileIndex = listBox1.SelectedIndex;
                 return;
             }
+            var itemIndex = listBox1.SelectedIndex;
+            if (itemIndex == mPrevFileIndex) {
+                return;
+            }
+            mPrevFileIndex = itemIndex;
             var filePath = (string)listBox1.Items[itemIndex];
             if (!File.Exists(filePath)) {
                 return;
@@ -171,7 +177,9 @@ namespace ADPCM {
             Text = filePath;
             load();
             trackbar1.Value = 0;
-            play();
+            if ("一時停止" == btnPlay.Text) {
+                play();
+            }
         }
 
         void setPos() {
