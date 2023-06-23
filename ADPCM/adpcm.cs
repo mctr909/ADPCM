@@ -16,18 +16,18 @@ class ADPCM2 {
 	readonly int[] MASK = { 0b1, 0b11, 0b111, 0b1111 };
 	readonly int[] MAX_VALUE = { 0, 1, 3, 7 };
 	readonly int[] MIN_VALUE = { 0, -2, -4, -8 };
-	readonly double[] KE = { 0.6, 0.75, 0.75, 0.75 };
-	readonly double[] KD = { 0.0, 3.00, 3.00, 3.00 };
+	readonly double[] KE = { 0.66, 0.75, 0.75, 0.75 };
+	readonly double[] KD = { 0.66, 3.00, 3.00, 3.00 };
 	readonly double[][] DELTA_STEP = {
 		new double[] {
-			1.7500, // 0b000
-			0.6250, // 0b001
+			1.3333, // 0b000
+			0.6666, // 0b001
 			0.9325, // 0b010
 			1.2500, // 0b011
 			1.2500, // 0b100
 			0.9325, // 0b101
-			0.6250, // 0b110
-			1.7500  // 0b111
+			0.6666, // 0b110
+			1.3333  // 0b111
 		}, // 1bit
 		new double[] { 0.6250, 1.5000, 1.5000 }, // 2bit
 		new double[] { 0.7500, 1.2500, 1.2500, 1.7500, 1.7500 }, // 3bit
@@ -36,11 +36,11 @@ class ADPCM2 {
 
 	int mType;
 	int mCodeD;
-	double mDelta = 4.0;
+	double mDelta = 1024.0;
 	double mPredict = 0.0;
 	double mFilter = 0.0;
 
-    public ADPCM2(int packes, TYPE type) {
+	public ADPCM2(TYPE type, int packes = 1) {
 		switch (type) {
 		case TYPE.BIT1:
 			mType = 0;
@@ -72,72 +72,78 @@ class ADPCM2 {
 		PackBytes = UNIT_BYTES * packes;
 	}
 
-    public void Encode(short[] p_input, byte[] p_output) {
-        for (int si = 0, bi = 0; si < Samples; si += UNIT_SAMPLES, bi += UNIT_BYTES) {
-            long output = 0;
-            for (int j = 0, sj = si; j < UNIT_SAMPLES && sj < Samples; j++, sj++) {
-                /*** フィルター ***/
-                mFilter = mFilter * KE[mType] + p_input[sj] * (1.0 - KE[mType]);
-                /*** エンコード ***/
-                int code;
-                if (0 == mType) {
-                    code = (0 <= (mFilter - mPredict) / mDelta) ? 1 : 0;
-                    update1bit(code);
-                } else {
-                    code = (int)((mFilter - mPredict) / mDelta);
-                    if (code < MIN_VALUE[mType]) {
-                        code = MIN_VALUE[mType];
-                    }
-                    if (MAX_VALUE[mType] < code) {
-                        code = MAX_VALUE[mType];
-                    }
-                    update(code);
-                }
-                if (code < 0) {
-                    output |= (long)(code + MASK[mType] + 1) << (BIT * j);
-                } else {
-                    output |= (long)code << (BIT * j);
-                }
-            }
-            for (int j = 0, bj = bi; j < UNIT_BYTES; j++, bj++) {
-                p_output[bj] = (byte)((output >> (8 * j)) & 0xFF);
-            }
-        }
-    }
-    
-    public void Decode(short[] p_output, byte[] p_input) {
-        for (int si = 0, bi = 0; si < Samples; si += UNIT_SAMPLES, bi += UNIT_BYTES) {
-            long input = 0;
-            for (int j = 0, bj = bi; j < UNIT_BYTES; j++, bj++) {
-                input |= (long)p_input[bj] << (8 * j);
-            }
-            for (int j = 0, sj = si; j < UNIT_SAMPLES && sj < Samples; j++, sj++) {
-                /*** デコード ***/
-                var code = (int)(input >> (BIT * j)) & MASK[mType];
-                double output;
-                if (0 == mType) {
-                    update1bit(code);
-                } else {
-                    if (MAX_VALUE[mType] < code) {
-                        code -= MASK[mType] + 1;
-                    }
-                    update(code);
-                }
-                /*** 出力 ***/
-                output = mPredict + (mPredict - mFilter) * KD[mType];
-                mFilter = mPredict;
-                if (output < -32768) {
-                    output = -32768;
-                }
-                if (32767 < output) {
-                    output = 32767;
-                }
-                p_output[sj] = (short)output;
-            }
-        }
-    }
+	public void Clear() {
+		mDelta = 1024.0;
+		mPredict = 0.0;
+		mFilter = 0.0;
+	}
 
-    void update(int code) {
+	public void Encode(short[] p_input, byte[] p_output) {
+		for (int si = 0, bi = 0; si < Samples; si += UNIT_SAMPLES, bi += UNIT_BYTES) {
+			long output = 0;
+			for (int j = 0, sj = si; j < UNIT_SAMPLES && sj < Samples; j++, sj++) {
+				/*** フィルター ***/
+				mFilter = mFilter * KE[mType] + p_input[sj] * (1.0 - KE[mType]);
+				/*** エンコード ***/
+				int code;
+				if (0 == mType) {
+					code = (0 <= (mFilter - mPredict) / mDelta) ? 1 : 0;
+					update1bit(code);
+				} else {
+					code = (int)((mFilter - mPredict) / mDelta);
+					if (code < MIN_VALUE[mType]) {
+						code = MIN_VALUE[mType];
+					}
+					if (MAX_VALUE[mType] < code) {
+						code = MAX_VALUE[mType];
+					}
+					update(code);
+				}
+				if (code < 0) {
+					output |= (long)(code + MASK[mType] + 1) << (BIT * j);
+				} else {
+					output |= (long)code << (BIT * j);
+				}
+			}
+			for (int j = 0, bj = bi; j < UNIT_BYTES; j++, bj++) {
+				p_output[bj] = (byte)((output >> (8 * j)) & 0xFF);
+			}
+		}
+	}
+
+	public void Decode(short[] p_output, byte[] p_input, int offset = 0) {
+		for (int si = 0, bi = 0; si < Samples; si += UNIT_SAMPLES, bi += UNIT_BYTES) {
+			long input = 0;
+			for (int j = 0, bj = bi; j < UNIT_BYTES; j++, bj++) {
+				input |= (long)p_input[bj] << (8 * j);
+			}
+			for (int j = 0, sj = si; j < UNIT_SAMPLES && sj < Samples; j++, sj++) {
+				/*** デコード ***/
+				var code = (int)(input >> (BIT * j)) & MASK[mType];
+				double output;
+				if (0 == mType) {
+					update1bit(code);
+				} else {
+					if (MAX_VALUE[mType] < code) {
+						code -= MASK[mType] + 1;
+					}
+					update(code);
+				}
+				/*** 出力 ***/
+				output = mPredict + (mPredict - mFilter) * KD[mType];
+				mFilter = mPredict;
+				if (output < -32768) {
+					output = -32768;
+				}
+				if (32767 < output) {
+					output = 32767;
+				}
+				p_output[sj + offset] = (short)output;
+			}
+		}
+	}
+
+	void update(int code) {
 		if (code < 0) {
 			mDelta *= DELTA_STEP[mType][-code];
 		} else {
@@ -150,9 +156,15 @@ class ADPCM2 {
 			mDelta = 16384;
 		}
 		mPredict += code * mDelta;
+		if (32767 < mPredict) {
+			mPredict = 32767;
+		}
+		if (mPredict < -32768) {
+			mPredict = -32768;
+		}
 	}
-	
-    void update1bit(int code) {
+
+	void update1bit(int code) {
 		mCodeD = (mCodeD << 1) & 0b111;
 		mCodeD |= code;
 		mDelta *= DELTA_STEP[0][mCodeD];
@@ -166,6 +178,12 @@ class ADPCM2 {
 			mPredict += mDelta;
 		} else {
 			mPredict -= mDelta;
+		}
+		if (32767 < mPredict) {
+			mPredict = 32767;
+		}
+		if (mPredict < -32768) {
+			mPredict = -32768;
 		}
 	}
 }

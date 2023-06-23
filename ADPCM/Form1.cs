@@ -56,7 +56,7 @@ namespace ADPCM {
             var dir = Path.GetDirectoryName(Text);
             var fileName = Path.GetFileNameWithoutExtension(Text);
             stop();
-            if (!RiffAdpcm.EncodeFile(Text, dir + "\\" + fileName + ".bin", (ADPCM2.TYPE)numBit.Value, 16)) {
+            if (!RiffAdpcm.EncodeFile(Text, dir + "\\" + fileName + ".bin", (ADPCM2.TYPE)numBit.Value)) {
                 var dec = new RiffAdpcm(Text);
                 if (dec.IsLoadComplete) {
                     dec.DecodeFile(dir + "\\" + fileName + "_decode.wav");

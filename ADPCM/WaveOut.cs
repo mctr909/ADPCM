@@ -63,6 +63,8 @@ namespace ADPCM {
                     mWave.DataPosition = value;
                 } else if (IsRiffAdpcm) {
                     mAdpcm.DataPosition = value;
+                    mAdpcmDL.Clear();
+                    mAdpcmDR.Clear();
                 } else if (null != mFs) {
                     mFs.Position = value;
                 }
@@ -92,10 +94,10 @@ namespace ADPCM {
             openFile();
 
             if (IsRiffWave) {
-                mAdpcmEL = new ADPCM2(16, (ADPCM2.TYPE)bits);
-                mAdpcmER = new ADPCM2(16, (ADPCM2.TYPE)bits);
-                mAdpcmDL = new ADPCM2(16, (ADPCM2.TYPE)bits);
-                mAdpcmDR = new ADPCM2(16, (ADPCM2.TYPE)bits);
+                mAdpcmEL = new ADPCM2((ADPCM2.TYPE)bits, 64);
+                mAdpcmER = new ADPCM2((ADPCM2.TYPE)bits, 64);
+                mAdpcmDL = new ADPCM2((ADPCM2.TYPE)bits, 64);
+                mAdpcmDR = new ADPCM2((ADPCM2.TYPE)bits, 64);
                 mEncL = new byte[mAdpcmEL.PackBytes];
                 mEncR = new byte[mAdpcmER.PackBytes];
                 mBufferSamples = mAdpcmEL.Samples;
@@ -130,6 +132,11 @@ namespace ADPCM {
                 mBuffR = new short[mBufferSamples];
                 Setup(mWave.SampleRate, mWave.Channels, mPackingSize);
             } else if (IsRiffAdpcm) {
+                mAdpcmDL = new ADPCM2(mAdpcm.Type, mAdpcm.Packes);
+                mAdpcmDR = new ADPCM2(mAdpcm.Type, mAdpcm.Packes);
+                mEncL = new byte[mAdpcmDL.PackBytes];
+                mEncR = new byte[mAdpcmDR.PackBytes];
+                mBufferSamples = mAdpcmDL.Samples * 64;
                 switch (mAdpcm.Channels) {
                 case 1:
                     mLoader = loadAdpcmMono;
@@ -139,7 +146,7 @@ namespace ADPCM {
                     break;
                 }
                 mPosition = mAdpcm.DataPosition;
-                mPackingSize = mAdpcm.PackBytes;
+                mPackingSize = mAdpcmDL.PackBytes * mAdpcm.Channels * 64;
                 mBuffL = new short[mBufferSamples];
                 mBuffR = new short[mBufferSamples];
                 Setup(mAdpcm.SampleRate, mAdpcm.Channels, mBufferSamples * mAdpcm.Channels * 2);
@@ -232,17 +239,22 @@ namespace ADPCM {
         }
 
         void loadAdpcmStereo() {
-            mAdpcm.SetBufferCh2(mBuffL, mBuffR);
-            mLoadSamples = mBuffL.Length;
-            mPosition += mAdpcm.PackBytes;
-            if (DataSize <= Position) {
-                mStopped = true;
+            for (int i = 0; i < mBufferSamples; i += mAdpcmDL.Samples) {
+                mAdpcm.SetBufferCh2(mEncL, mEncR);
+                mAdpcmDL.Decode(mBuffL, mEncL, i);
+                mAdpcmDR.Decode(mBuffR, mEncR, i);
+                mLoadSamples = mBuffL.Length;
+                mPosition += mAdpcmDL.PackBytes * 2;
+                if (DataSize <= Position) {
+                    mStopped = true;
+                }
             }
         }
         void loadAdpcmMono() {
-            mAdpcm.SetBufferCh1(mBuffL);
+            mAdpcm.SetBufferCh1(mEncL);
+            mAdpcmDL.Decode(mBuffL, mEncL);
             mLoadSamples = mBuffL.Length;
-            mPosition += mAdpcm.PackBytes;
+            mPosition += mAdpcmDL.PackBytes;
             if (DataSize <= Position) {
                 mStopped = true;
             }
@@ -331,7 +343,6 @@ namespace ADPCM {
                 mAdpcm = new RiffAdpcm(mFilePath);
                 if (mAdpcm.IsLoadComplete) {
                     IsRiffAdpcm = true;
-                    mBufferSamples = mAdpcm.PackSamples;
                 } else {
                     mFs = new FileStream(mFilePath, FileMode.Open);
                     mBufferSamples = (mPackingSize < 128 ? 128 : mPackingSize) * VAG.PACKING_SAMPLES * 2 >> 4;
