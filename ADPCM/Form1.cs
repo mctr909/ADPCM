@@ -62,7 +62,6 @@ namespace ADPCM {
                     dec.DecodeFile(dir + "\\" + fileName + "_decode.wav");
                 } else {
                     VAG.DecodeFile(Text, dir + "\\" + fileName + "_decode.wav",
-                        0,
                         (int)numSampleRate.Value,
                         (int)numPackingSize.Value,
                         (int)numChannels.Value

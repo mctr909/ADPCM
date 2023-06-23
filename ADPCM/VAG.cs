@@ -144,7 +144,11 @@ class VAG {
         }
     }
 
-    public static void DecodeFile(string inputPath, string outputPath, int offset, int sampleRate, int packSize, int channels) {
+    public static void DecodeFile(
+        string inputPath, string outputPath,
+        int sampleRate, int packSize, int channels,
+        int offset = 0, int end = 0
+    ) {
         /// TODO: decode vag
     }
 }
