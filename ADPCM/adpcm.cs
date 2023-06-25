@@ -33,10 +33,22 @@ class ADPCM2 {
 		new double[] { 0.7500, 1.1250, 1.1250, 1.7500, 1.7500 }, // 3bit
 		new double[] { 0.7500, 1.1250, 1.1250, 1.1250, 1.1250, 1.5, 1.5, 1.85, 1.85 } // 4bit
 	};
+	readonly byte[] ENCODE = {
+		0x8, 0x3, 0xD, 0x5,
+		0xB, 0x0, 0xE, 0x6,
+		0x9, 0x1, 0xF, 0x4,
+		0xA, 0x2, 0xC, 0x7
+	};
+	readonly byte[] DECODE = {
+		0x5, 0x9, 0xD, 0x1,
+		0xB, 0x3, 0x7, 0xF,
+		0x0, 0x8, 0xC, 0x4,
+		0xE, 0x2, 0x6, 0xA
+	};
 
 	int mType;
 	int mCodeD;
-	double mDelta = 1024.0;
+	double mDelta = 0.25;
 	double mPredict = 0.0;
 	double mFilter = 0.0;
 
@@ -105,8 +117,15 @@ class ADPCM2 {
 					output |= (long)code << (BIT * j);
 				}
 			}
-			for (int j = 0, bj = bi; j < UNIT_BYTES; j++, bj++) {
-				p_output[bj] = (byte)((output >> (8 * j)) & 0xFF);
+			if (0 == mType) {
+				for (int j = 0, bj = bi; j < UNIT_BYTES; j++, bj++) {
+					var b = (byte)((output >> (8 * j)) & 0xFF);
+					p_output[bj] = (byte)(ENCODE[b & 0xF] | (ENCODE[b >> 4] << 4));
+				}
+			} else {
+				for (int j = 0, bj = bi; j < UNIT_BYTES; j++, bj++) {
+					p_output[bj] = (byte)((output >> (8 * j)) & 0xFF);
+				}
 			}
 		}
 	}
@@ -114,8 +133,16 @@ class ADPCM2 {
 	public void Decode(short[] p_output, byte[] p_input, int offset = 0) {
 		for (int si = 0, bi = 0; si < Samples; si += UNIT_SAMPLES, bi += UNIT_BYTES) {
 			long input = 0;
-			for (int j = 0, bj = bi; j < UNIT_BYTES; j++, bj++) {
-				input |= (long)p_input[bj] << (8 * j);
+			if (0 == mType) {
+				for (int j = 0, bj = bi; j < UNIT_BYTES; j++, bj++) {
+					var b = p_input[bj];
+					b = (byte)(DECODE[b & 0xF] | (DECODE[b >> 4] << 4));
+					input |= (long)b << (8 * j);
+				}
+			} else {
+				for (int j = 0, bj = bi; j < UNIT_BYTES; j++, bj++) {
+					input |= (long)p_input[bj] << (8 * j);
+				}
 			}
 			for (int j = 0, sj = si; j < UNIT_SAMPLES && sj < Samples; j++, sj++) {
 				/*** デコード ***/
@@ -149,8 +176,8 @@ class ADPCM2 {
 		} else {
 			mDelta *= DELTA_STEP[mType][code];
 		}
-		if (mDelta < 3) {
-			mDelta = 3;
+		if (mDelta < 0.25) {
+			mDelta = 0.25;
 		}
 		if (16384 < mDelta) {
 			mDelta = 16384;
