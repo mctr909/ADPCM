@@ -94,10 +94,10 @@ namespace ADPCM {
             openFile();
 
             if (IsRiffWave) {
-                mAdpcmEL = new ADPCM2((ADPCM2.TYPE)bits, 64);
-                mAdpcmER = new ADPCM2((ADPCM2.TYPE)bits, 64);
-                mAdpcmDL = new ADPCM2((ADPCM2.TYPE)bits, 64);
-                mAdpcmDR = new ADPCM2((ADPCM2.TYPE)bits, 64);
+                mAdpcmEL = new ADPCM2((ADPCM2.TYPE)bits, 128);
+                mAdpcmER = new ADPCM2((ADPCM2.TYPE)bits, 128);
+                mAdpcmDL = new ADPCM2((ADPCM2.TYPE)bits, 128);
+                mAdpcmDR = new ADPCM2((ADPCM2.TYPE)bits, 128);
                 mEncL = new byte[mAdpcmEL.PackBytes];
                 mEncR = new byte[mAdpcmER.PackBytes];
                 mBufferSamples = mAdpcmEL.Samples;
