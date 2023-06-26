@@ -79,7 +79,6 @@ namespace ADPCM {
                 mEncL = new byte[mAdpcmEL.PackBytes];
                 mEncR = new byte[mAdpcmER.PackBytes];
                 var bufferSamples = mAdpcmEL.Samples;
-                mWave.AllocateBuffer(bufferSamples);
                 switch (mWave.Tag) {
                 case RiffWave.TAG.INT:
                     switch (mWave.Channels) {
@@ -108,7 +107,7 @@ namespace ADPCM {
                 PackingSize = bufferSamples * mWave.SamplePerBytes;
                 mBuffL = new short[bufferSamples];
                 mBuffR = new short[bufferSamples];
-                Setup(mWave.SampleRate, mWave.Channels, bufferSamples * mWave.Channels);
+                Setup(mWave.SampleRate, mWave.Channels, bufferSamples * mWave.Channels * 2);
             } else if (IsRiffAdpcm) {
                 mAdpcmDL = new ADPCM2(mAdpcm.Type, mAdpcm.Packes);
                 mAdpcmDR = new ADPCM2(mAdpcm.Type, mAdpcm.Packes);
@@ -132,12 +131,12 @@ namespace ADPCM {
                 mLoader = loadVAG;
                 mPosition = 0;
                 PackingSize = packingSize;
-                var bufferSamples = (PackingSize < 128 ? 128 : PackingSize) * VAG.UNIT_SAMPLES >> 4;
+                var bufferSamples = (PackingSize < 128 ? 128 : PackingSize) * VAG.UNIT_SAMPLES * 2 >> 4;
                 mEncL = new byte[VAG.UNIT_BYTES];
                 mEncR = new byte[VAG.UNIT_BYTES];
                 mBuffL = new short[bufferSamples];
                 mBuffR = new short[bufferSamples];
-                Setup(sampleRate, 2, bufferSamples * 2);
+                Setup(sampleRate, 2, bufferSamples);
             }
         }
 
@@ -336,6 +335,9 @@ namespace ADPCM {
             closeFile();
             mWave = new RiffWave(mFilePath);
             if (mWave.IsLoadComplete) {
+                if (null != mBuffL) {
+                    mWave.AllocateBuffer(mBuffL.Length);
+                }
                 DataSize = mWave.DataSize;
                 IsRiffWave = true;
             } else {
