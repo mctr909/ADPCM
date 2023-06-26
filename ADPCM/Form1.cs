@@ -85,7 +85,7 @@ namespace ADPCM {
                 var itemIndex = listBox1.SelectedIndex;
                 if (itemIndex < 0) {
                     mWave.Position = 0;
-                    btnPlay.Text = "再生";
+                    stop();
                     return;
                 }
                 if (listBox1.Items.Count <= itemIndex + 1) {

@@ -122,12 +122,12 @@ public abstract class WaveLib : IDisposable {
 
     public int SampleRate { get; private set; }
     public int Channels { get; private set; }
-    public int BufferSize { get; private set; }
+    public int BufferSamples { get; private set; }
 
-    protected void Setup(int sampleRate = 44100, int channels = 2, int bufferSize = 4096, int bufferCount = 4, bool rec = false) {
+    protected void Setup(int sampleRate = 44100, int channels = 2, int bufferSamples = 4096, int bufferCount = 4, bool rec = false) {
         SampleRate = sampleRate;
         Channels = channels;
-        BufferSize = bufferSize;
+        BufferSamples = bufferSamples;
         mBufferIndex = 0;
 
         mWaveOutHandle = IntPtr.Zero;
@@ -135,7 +135,7 @@ public abstract class WaveLib : IDisposable {
         mWaveHeader = new WAVEHDR[bufferCount];
         mOutCallback = new DOutCallback(OutCallback);
         mInCallback = new DInCallback(InCallback);
-        WaveBuffer = new short[BufferSize];
+        WaveBuffer = new short[BufferSamples];
 
         if (rec) {
             WaveInOpen();
@@ -169,7 +169,7 @@ public abstract class WaveLib : IDisposable {
 
         waveOutOpen(ref mWaveOutHandle, WAVE_MAPPER, ref mWaveFormatEx, mOutCallback, IntPtr.Zero);
 
-        WaveBuffer = new short[BufferSize];
+        WaveBuffer = new short[BufferSamples];
 
         for (int i = 0; i < mWaveHeader.Length; ++i) {
             mWaveHeaderPtr[i] = Marshal.AllocHGlobal(Marshal.SizeOf(mWaveHeader[i]));
@@ -200,7 +200,7 @@ public abstract class WaveLib : IDisposable {
 
         waveInOpen(ref mWaveInHandle, WAVE_MAPPER, ref mWaveFormatEx, mInCallback, IntPtr.Zero);
 
-        WaveBuffer = new short[BufferSize];
+        WaveBuffer = new short[BufferSamples];
 
         for (int i = 0; i < mWaveHeader.Length; ++i) {
             mWaveHeaderPtr[i] = Marshal.AllocHGlobal(Marshal.SizeOf(mWaveHeader[i]));

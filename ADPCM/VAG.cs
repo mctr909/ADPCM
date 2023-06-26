@@ -11,9 +11,8 @@ class VAG {
         LOOP_START = 6,
         PLAYBACK_END = 7
     };
-    public const int PACKING_SAMPLES = 28;
-    public byte[] EncBuf = new byte[PACKING_SAMPLES / 2 + 2];
-    public short[] DecBuf = new short[PACKING_SAMPLES];
+    public const int UNIT_BYTES = 16;
+    public const int UNIT_SAMPLES = 28;
 
     static readonly double[,] ENC_K = new double[,] {
         { 0.0, 0.0 },
@@ -34,9 +33,9 @@ class VAG {
     double mF2 = 0.0;
     double mS1 = 0.0;
     double mS2 = 0.0;
-    double[,] mPredictBuf = new double[PACKING_SAMPLES, 5];
+    double[,] mPredictBuf = new double[UNIT_SAMPLES, 5];
 
-    public void Encode(short[] pcmData) {
+    public void Encode(short[] input, byte[] output) {
         int predict = 0;
         double min = 1e10;
         double f1 = 0.0;
@@ -45,8 +44,8 @@ class VAG {
             double max = 0.0;
             f1 = mF1;
             f2 = mF2;
-            for (int i = 0; i < PACKING_SAMPLES; i++) {
-                var sample = pcmData[i];
+            for (int i = 0; i < UNIT_SAMPLES; i++) {
+                var sample = input[i];
                 if (sample > 30719) {
                     sample = 30719;
                 }
@@ -84,7 +83,7 @@ class VAG {
             shift_mask >>= 1;
         }
 
-        for (int i = 0, ib = 2; i < PACKING_SAMPLES; i += 2, ib++) {
+        for (int i = 0, ib = 2; i < UNIT_SAMPLES; i += 2, ib++) {
             var d_trans = mPredictBuf[i, predict] + mS1 * ENC_K[predict, 0] + mS2 * ENC_K[predict, 1];
             var d_sample = d_trans * (1 << shift);
             var sample = (int)(((int)d_sample + 0x800) & 0xFFFFF000);
@@ -111,19 +110,19 @@ class VAG {
             mS1 = (sample >> shift) - d_trans;
             var out2 = sample;
 
-            EncBuf[ib] = (byte)(((out1 >> 12) & 0x0F) | ((out2 >> 8) & 0xF0));
+            output[ib] = (byte)(((out1 >> 12) & 0x0F) | ((out2 >> 8) & 0xF0));
         }
-        EncBuf[0] = (byte)(((predict << 4) & 0xF0) | (shift & 0x0F));
+        output[0] = (byte)(((predict << 4) & 0xF0) | (shift & 0x0F));
     }
 
-    public void Decode(byte[] vagData) {
-        var shift = vagData[0] & 0xF;
-        var predict = (vagData[0] & 0xF0) >> 4;
+    public void Decode(byte[] input, short[] output, int offset) {
+        var shift = input[0] & 0xF;
+        var predict = (input[0] & 0xF0) >> 4;
         if (4 < predict) {
             predict = 0;
         }
-        for (int i = 0, b = 2; i < PACKING_SAMPLES; i += 2, b++) {
-            var in1 = (vagData[b] & 0x0F) << 12;
+        for (int i = 0, s = offset, b = 2; i < UNIT_SAMPLES; i += 2, s += 2, b++) {
+            var in1 = (input[b] & 0x0F) << 12;
             if ((in1 & 0x8000) != 0) {
                 in1 = (int)(in1 | 0xFFFF0000);
             }
@@ -131,7 +130,7 @@ class VAG {
             mS2 = mS1;
             mS1 = out1;
 
-            var in2 = (vagData[b] & 0xF0) << 8;
+            var in2 = (input[b] & 0xF0) << 8;
             if ((in2 & 0x8000) != 0) {
                 in2 = (int)(in2 | 0xFFFF0000);
             }
@@ -139,8 +138,8 @@ class VAG {
             mS2 = mS1;
             mS1 = out2;
 
-            DecBuf[i] = (short)out1;
-            DecBuf[i + 1] = (short)out2;
+            output[s] = (short)out1;
+            output[s + 1] = (short)out2;
         }
     }
 
