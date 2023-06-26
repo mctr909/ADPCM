@@ -17,7 +17,6 @@ namespace ADPCM {
         ADPCM2 mAdpcmDL;
         ADPCM2 mAdpcmDR;
 
-        int mPackingSize;
         int mLoadedSamples = 0;
         long mPosition = 0;
 
@@ -36,6 +35,7 @@ namespace ADPCM {
 
         public int VagChannels = 2;
 
+        public int PackingSize { get; private set; }
         public long DataSize { get; private set; }
         public long Position {
             get { return mPosition; }
@@ -54,8 +54,6 @@ namespace ADPCM {
         }
         public bool IsRiffWave { get; private set; } = false;
         public bool IsRiffAdpcm { get; private set; } = false;
-
-        public int PackingSize { get { return mPackingSize; } }
         public int Bits {
             get {
                 if (IsRiffWave) {
@@ -107,7 +105,7 @@ namespace ADPCM {
                     break;
                 }
                 mPosition = mWave.DataPosition;
-                mPackingSize = bufferSamples * mWave.SamplePerBytes;
+                PackingSize = bufferSamples * mWave.SamplePerBytes;
                 mBuffL = new short[bufferSamples];
                 mBuffR = new short[bufferSamples];
                 Setup(mWave.SampleRate, mWave.Channels, bufferSamples * mWave.Channels);
@@ -126,15 +124,15 @@ namespace ADPCM {
                     break;
                 }
                 mPosition = mAdpcm.DataPosition;
-                mPackingSize = mAdpcmDL.PackBytes * mAdpcm.Channels * 64;
+                PackingSize = mAdpcmDL.PackBytes * mAdpcm.Channels * 64;
                 mBuffL = new short[bufferSamples];
                 mBuffR = new short[bufferSamples];
                 Setup(mAdpcm.SampleRate, mAdpcm.Channels, bufferSamples * mAdpcm.Channels * 2);
             } else {
                 mLoader = loadVAG;
                 mPosition = 0;
-                mPackingSize = packingSize;
-                var bufferSamples = (mPackingSize < 128 ? 128 : mPackingSize) * VAG.UNIT_SAMPLES >> 4;
+                PackingSize = packingSize;
+                var bufferSamples = (PackingSize < 128 ? 128 : PackingSize) * VAG.UNIT_SAMPLES >> 4;
                 mEncL = new byte[VAG.UNIT_BYTES];
                 mEncR = new byte[VAG.UNIT_BYTES];
                 mBuffL = new short[bufferSamples];
@@ -212,28 +210,29 @@ namespace ADPCM {
         }
 
         void loadVAG() {
-            for (int b = 0, s = 0; b < mPackingSize; b += VAG.UNIT_BYTES, s += VAG.UNIT_SAMPLES) {
+            for (int b = 0, s = 0; b < PackingSize; b += VAG.UNIT_BYTES, s += VAG.UNIT_SAMPLES) {
                 mFsVag.Read(mEncL, 0, mEncL.Length);
                 mVagL.Decode(mEncL, mBuffL, s);
             }
+            mPosition += PackingSize;
             if (1 == VagChannels) {
                 Array.Copy(mBuffL, 0, mBuffR, 0, mBuffR.Length);
             }
             if (2 <= VagChannels) {
-                for (int b = 0, s = 0; b < mPackingSize; b += VAG.UNIT_BYTES, s += VAG.UNIT_SAMPLES) {
+                for (int b = 0, s = 0; b < PackingSize; b += VAG.UNIT_BYTES, s += VAG.UNIT_SAMPLES) {
                     mFsVag.Read(mEncR, 0, mEncR.Length);
                     mVagR.Decode(mEncR, mBuffR, s);
                 }
+                mPosition += PackingSize;
             }
-            mPosition += mPackingSize * VagChannels;
             for (int c = 2; c < VagChannels; c++) {
-                mFsVag.Position += mPackingSize;
-                mPosition += mPackingSize;
+                mFsVag.Position += PackingSize;
+                mPosition += PackingSize;
             }
             if (DataSize <= Position) {
                 mStopped = true;
             }
-            mLoadedSamples = VAG.UNIT_SAMPLES * mPackingSize >> 4;
+            mLoadedSamples = VAG.UNIT_SAMPLES * PackingSize >> 4;
         }
 
         void loadAdpcmStereo() {
@@ -284,7 +283,7 @@ namespace ADPCM {
         }
         void loadFloatStereo() {
             mWave.SetBufferFloat(mBuffFL, mBuffFR);
-            for(int i=0; i< mBuffFL.Length; i++) {
+            for (int i = 0; i < mBuffFL.Length; i++) {
                 var l = mBuffFL[i];
                 var r = mBuffFR[i];
                 if (l < -1.0) {
