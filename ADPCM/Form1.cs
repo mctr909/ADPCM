@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using System.IO;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace ADPCM {
     public partial class Form1 : Form {
@@ -50,6 +51,33 @@ namespace ADPCM {
             } else {
                 stop();
             }
+        }
+
+        private void rbVAG_CheckedChanged(object sender, EventArgs e) {
+            var check = ((RadioButton)sender).Checked;
+            numBit.Enabled = !check;
+            numBit.Value = 4;
+            numPackingSize.Value = mWave.PackingSize;
+            numSampleRate.Value = mWave.SampleRate;
+            numChannels.Value = mWave.Channels;
+            numPackingSize.Enabled = check;
+            numSampleRate.Enabled = !check;
+            numChannels.Enabled = !check;
+            btnApply.Enabled = check;
+            reload();
+        }
+
+        private void rbADPCM_CheckedChanged(object sender, EventArgs e) {
+            var check = ((RadioButton)sender).Checked;
+            numBit.Enabled = check;
+            numPackingSize.Value = mWave.PackingSize;
+            numSampleRate.Value = mWave.SampleRate;
+            numChannels.Value = mWave.Channels;
+            numPackingSize.Enabled = !check;
+            numSampleRate.Enabled = !check;
+            numChannels.Enabled = !check;
+            btnApply.Enabled = !check;
+            reload();
         }
 
         private void btnEncode_Click(object sender, EventArgs e) {
@@ -122,24 +150,11 @@ namespace ADPCM {
         }
 
         private void btnApply_Click(object sender, EventArgs e) {
-            if (string.IsNullOrEmpty(Text) || !File.Exists(Text)) {
-                return;
-            }
-            load();
-            if ("一時停止" == btnPlay.Text) {
-                setPos();
-                play();
-            }
+            reload();
         }
 
         private void numBit_ValueChanged(object sender, EventArgs e) {
-            if (null == mWave) {
-                return;
-            }
-            load();
-            if ("一時停止" == btnPlay.Text) {
-                play();
-            }
+            reload();
         }
 
         private void listBox1_MouseDown(object sender, MouseEventArgs e) {
@@ -228,15 +243,12 @@ namespace ADPCM {
             trackbar1.MinorTickFreq = len / div;
             trackbar1.MajorTickFreq = trackbar1.MinorTickFreq * 10;
             if (mWave.IsRiffWave) {
-                numPackingSize.Value = mWave.PackingSize;
-                numSampleRate.Value = mWave.SampleRate;
-                numChannels.Value = mWave.Channels;
-                numPackingSize.Enabled = false;
-                numSampleRate.Enabled = false;
-                numChannels.Enabled = false;
-                numBit.Enabled = true;
-                btnApply.Enabled = false;
+                rbVAG.Enabled = true;
+                rbADPCM.Enabled = true;
             } else if (mWave.IsRiffAdpcm) {
+                rbVAG.Enabled = false;
+                rbADPCM.Enabled = false;
+                rbADPCM.Checked = true;
                 numPackingSize.Value = mWave.PackingSize;
                 numSampleRate.Value = mWave.SampleRate;
                 numChannels.Value = mWave.Channels;
@@ -247,12 +259,29 @@ namespace ADPCM {
                 numBit.Enabled = false;
                 btnApply.Enabled = false;
             } else {
+                rbADPCM.Enabled = false;
+                rbVAG.Enabled = false;
+                rbVAG.Checked = true;
                 numPackingSize.Value = 128;
                 numPackingSize.Enabled = true;
                 numSampleRate.Enabled = true;
                 numChannels.Enabled = true;
                 numBit.Enabled = false;
                 btnApply.Enabled = true;
+            }
+        }
+
+        void reload() {
+            if (string.IsNullOrEmpty(Text) || !File.Exists(Text)) {
+                return;
+            }
+            if (null == mWave) {
+                return;
+            }
+            load();
+            if ("一時停止" == btnPlay.Text) {
+                setPos();
+                play();
             }
         }
     }

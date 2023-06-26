@@ -42,6 +42,8 @@ namespace ADPCM {
             this.btnEncode = new System.Windows.Forms.Button();
             this.trackbar1 = new ADPCM.Trackbar();
             this.numBit = new System.Windows.Forms.NumericUpDown();
+            this.rbVAG = new System.Windows.Forms.RadioButton();
+            this.rbADPCM = new System.Windows.Forms.RadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.numChannels)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPackingSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numSampleRate)).BeginInit();
@@ -274,11 +276,37 @@ namespace ADPCM {
             0});
             this.numBit.ValueChanged += new System.EventHandler(this.numBit_ValueChanged);
             // 
+            // rbVAG
+            // 
+            this.rbVAG.AutoSize = true;
+            this.rbVAG.Location = new System.Drawing.Point(259, 94);
+            this.rbVAG.Name = "rbVAG";
+            this.rbVAG.Size = new System.Drawing.Size(47, 16);
+            this.rbVAG.TabIndex = 16;
+            this.rbVAG.TabStop = true;
+            this.rbVAG.Text = "VAG";
+            this.rbVAG.UseVisualStyleBackColor = true;
+            this.rbVAG.CheckedChanged += new System.EventHandler(this.rbVAG_CheckedChanged);
+            // 
+            // rbADPCM
+            // 
+            this.rbADPCM.AutoSize = true;
+            this.rbADPCM.Location = new System.Drawing.Point(312, 94);
+            this.rbADPCM.Name = "rbADPCM";
+            this.rbADPCM.Size = new System.Drawing.Size(63, 16);
+            this.rbADPCM.TabIndex = 17;
+            this.rbADPCM.TabStop = true;
+            this.rbADPCM.Text = "ADPCM";
+            this.rbADPCM.UseVisualStyleBackColor = true;
+            this.rbADPCM.CheckedChanged += new System.EventHandler(this.rbADPCM_CheckedChanged);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(532, 268);
+            this.Controls.Add(this.rbADPCM);
+            this.Controls.Add(this.rbVAG);
             this.Controls.Add(this.numBit);
             this.Controls.Add(this.btnEncode);
             this.Controls.Add(this.lblPos);
@@ -329,6 +357,8 @@ namespace ADPCM {
         private System.Windows.Forms.Label lblPos;
         private System.Windows.Forms.Button btnEncode;
         private System.Windows.Forms.NumericUpDown numBit;
+        private System.Windows.Forms.RadioButton rbVAG;
+        private System.Windows.Forms.RadioButton rbADPCM;
     }
 }
 
