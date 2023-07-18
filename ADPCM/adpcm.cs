@@ -17,13 +17,17 @@ class ADPCM2 {
 	readonly int[] MAX_VALUE = { 0, 1, 3, 7 };
 	readonly int[] MIN_VALUE = { 0, -2, -4, -8 };
 	readonly double[] KE = { 0.33, 0.25, 0.25, 0.00 };
-	readonly double[] KD = { 0.00, 0.25, 0.33, 0.00 };
+	readonly double[] KD = { 0.0, 0.25, 0.33, 0.00 };
 	readonly double[][] DELTA_STEP = {
 		new double[] {
-			17/16.0, // 0b00
-			15/16.0, // 0b01
-			15/16.0, // 0b10
-			17/16.0, // 0b11
+			73/72.0, // 0b000
+			71/72.0, // 0b001
+			71/72.0, // 0b010
+			129/128.0, // 0b011
+			129/128.0, // 0b100
+			71/72.0, // 0b101
+			71/72.0, // 0b110
+			73/72.0  // 0b111
 		}, // 1bit
 		new double[] { 0.9375, 1.1250, 1.1250 }, // 2bit
 		new double[] { 0.7500, 1.1250, 1.1250, 1.7500, 1.7500 }, // 3bit
@@ -118,17 +122,14 @@ class ADPCM2 {
 				double output;
 				if (0 == mType) {
 					update1bit(code);
-					/*** 出力 ***/
-					output = (mPredict + mFilter) * 0.5;
-					mFilter = mPredict;
 				} else {
 					if (MAX_VALUE[mType] < code) {
 						code -= MASK[mType] + 1;
 					}
 					update(code);
-					/*** 出力 ***/
-					output = mPredict + (mPredict - mFilter) * KD[mType];
 				}
+				/*** 出力 ***/
+				output = mPredict + (mPredict - mFilter) * KD[mType];
 				mFilter = mPredict;
 				if (output < -32768) {
 					output = -32768;
@@ -163,7 +164,7 @@ class ADPCM2 {
 	}
 
 	void update1bit(int code) {
-		mCodeD = (mCodeD << 1) & 0b11;
+		mCodeD = (mCodeD << 1) & 0b111;
 		mCodeD |= code;
 		mDelta *= DELTA_STEP[0][mCodeD];
 		if (mDelta < 0.25) {

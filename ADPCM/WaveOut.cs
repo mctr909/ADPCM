@@ -34,6 +34,7 @@ namespace ADPCM {
         Loader mLoader;
 
         public int VagChannels = 2;
+        public double Volume = 1.0;
 
         public int PackingSize { get; private set; }
         public long DataSize { get; private set; }
@@ -183,7 +184,7 @@ namespace ADPCM {
                         mLoader();
                     }
                     for (int j = 0; j < mBuffL.Length && pos < BufferSamples; j++) {
-                        WaveBuffer[pos] = mBuffL[j];
+                        WaveBuffer[pos] = (short)(mBuffL[j] * Volume);
                         pos++;
                         mLoadedSamples--;
                     }
@@ -195,8 +196,8 @@ namespace ADPCM {
                         mLoader();
                     }
                     for (int j = 0; j < mBuffL.Length && pos < BufferSamples; j++) {
-                        WaveBuffer[pos] = mBuffL[j];
-                        WaveBuffer[pos + 1] = mBuffR[j];
+                        WaveBuffer[pos] = (short)(mBuffL[j] * Volume);
+                        WaveBuffer[pos + 1] = (short)(mBuffR[j] * Volume);
                         pos += 2;
                         mLoadedSamples--;
                     }
@@ -245,6 +246,24 @@ namespace ADPCM {
                     mStopped = true;
                 }
             }
+            for (int i = 0; i < mBuffL.Length; i++) {
+                var l = mBuffL[i] + (mBuffR[i] << RiffAdpcm.JOINT_STEREO);
+                var r = mBuffL[i] - (mBuffR[i] << RiffAdpcm.JOINT_STEREO);
+                if (l < -32768) {
+                    l = -32768;
+                }
+                if (32767 < l) {
+                    l = 32767;
+                }
+                if (r < -32768) {
+                    r = -32768;
+                }
+                if (32767 < r) {
+                    r = 32767;
+                }
+                mBuffL[i] = (short)l;
+                mBuffR[i] = (short)r;
+            }
         }
         void loadAdpcmMono() {
             for (int s = 0; s < mBuffL.Length; s += mAdpcmDL.Samples) {
@@ -260,10 +279,34 @@ namespace ADPCM {
 
         void loadIntStereo() {
             mWave.SetBufferInt(mBuffL, mBuffR);
+            for (int i = 0; i < mBuffL.Length; i++) {
+                var m = (short)((mBuffL[i] + mBuffR[i]) >> 1);
+                var s = (short)((mBuffL[i] - mBuffR[i]) >> (RiffAdpcm.JOINT_STEREO+1));
+                mBuffL[i] = m;
+                mBuffR[i] = s;
+            }
             mAdpcmEL.Encode(mBuffL, mEncL);
             mAdpcmER.Encode(mBuffR, mEncR);
             mAdpcmDL.Decode(mBuffL, mEncL);
             mAdpcmDR.Decode(mBuffR, mEncR);
+            for (int i = 0; i < mBuffL.Length; i++) {
+                var l = mBuffL[i] + (mBuffR[i] << RiffAdpcm.JOINT_STEREO);
+                var r = mBuffL[i] - (mBuffR[i] << RiffAdpcm.JOINT_STEREO);
+                if (l < -32768) {
+                    l = -32768;
+                }
+                if (32767 < l) {
+                    l = 32767;
+                }
+                if (r < -32768) {
+                    r = -32768;
+                }
+                if (32767 < r) {
+                    r = 32767;
+                }
+                mBuffL[i] = (short)l;
+                mBuffR[i] = (short)r;
+            }
             mLoadedSamples = mBuffL.Length;
             mPosition += mLoadedSamples * mWave.SamplePerBytes;
             if (DataSize <= Position) {

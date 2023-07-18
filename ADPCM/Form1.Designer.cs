@@ -40,22 +40,24 @@ namespace ADPCM {
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.lblPos = new System.Windows.Forms.Label();
             this.btnEncode = new System.Windows.Forms.Button();
-            this.trackbar1 = new ADPCM.Trackbar();
             this.numBit = new System.Windows.Forms.NumericUpDown();
             this.rbVAG = new System.Windows.Forms.RadioButton();
             this.rbADPCM = new System.Windows.Forms.RadioButton();
+            this.trbVoluime = new System.Windows.Forms.TrackBar();
+            this.trackbar1 = new ADPCM.Trackbar();
             ((System.ComponentModel.ISupportInitialize)(this.numChannels)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPackingSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numSampleRate)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPlayChannel)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numBit)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trbVoluime)).BeginInit();
             this.SuspendLayout();
             // 
             // btnPlay
             // 
-            this.btnPlay.Location = new System.Drawing.Point(12, 9);
+            this.btnPlay.Location = new System.Drawing.Point(10, 8);
             this.btnPlay.Name = "btnPlay";
-            this.btnPlay.Size = new System.Drawing.Size(75, 38);
+            this.btnPlay.Size = new System.Drawing.Size(101, 38);
             this.btnPlay.TabIndex = 2;
             this.btnPlay.Text = "再生";
             this.btnPlay.UseVisualStyleBackColor = true;
@@ -105,9 +107,9 @@ namespace ADPCM {
             // numPackingSize
             // 
             this.numPackingSize.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.numPackingSize.Location = new System.Drawing.Point(93, 24);
+            this.numPackingSize.Location = new System.Drawing.Point(117, 24);
             this.numPackingSize.Maximum = new decimal(new int[] {
-            4096,
+            8192,
             0,
             0,
             0});
@@ -128,7 +130,7 @@ namespace ADPCM {
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(91, 9);
+            this.label2.Location = new System.Drawing.Point(115, 9);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(79, 12);
             this.label2.TabIndex = 6;
@@ -137,7 +139,7 @@ namespace ADPCM {
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(171, 9);
+            this.label3.Location = new System.Drawing.Point(195, 9);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(94, 12);
             this.label3.TabIndex = 7;
@@ -146,7 +148,7 @@ namespace ADPCM {
             // numSampleRate
             // 
             this.numSampleRate.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.numSampleRate.Location = new System.Drawing.Point(173, 24);
+            this.numSampleRate.Location = new System.Drawing.Point(197, 24);
             this.numSampleRate.Maximum = new decimal(new int[] {
             192000,
             0,
@@ -168,7 +170,7 @@ namespace ADPCM {
             // 
             // btnApply
             // 
-            this.btnApply.Location = new System.Drawing.Point(271, 9);
+            this.btnApply.Location = new System.Drawing.Point(295, 8);
             this.btnApply.Name = "btnApply";
             this.btnApply.Size = new System.Drawing.Size(48, 38);
             this.btnApply.TabIndex = 9;
@@ -244,14 +246,6 @@ namespace ADPCM {
             this.btnEncode.UseVisualStyleBackColor = true;
             this.btnEncode.Click += new System.EventHandler(this.btnEncode_Click);
             // 
-            // trackbar1
-            // 
-            this.trackbar1.BackColor = System.Drawing.Color.Transparent;
-            this.trackbar1.Location = new System.Drawing.Point(12, 53);
-            this.trackbar1.Name = "trackbar1";
-            this.trackbar1.Size = new System.Drawing.Size(512, 31);
-            this.trackbar1.TabIndex = 0;
-            // 
             // numBit
             // 
             this.numBit.Font = new System.Drawing.Font("MS UI Gothic", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
@@ -300,6 +294,26 @@ namespace ADPCM {
             this.rbADPCM.UseVisualStyleBackColor = true;
             this.rbADPCM.CheckedChanged += new System.EventHandler(this.rbADPCM_CheckedChanged);
             // 
+            // trbVoluime
+            // 
+            this.trbVoluime.Location = new System.Drawing.Point(134, 90);
+            this.trbVoluime.Maximum = 0;
+            this.trbVoluime.Minimum = -36;
+            this.trbVoluime.Name = "trbVoluime";
+            this.trbVoluime.Size = new System.Drawing.Size(104, 45);
+            this.trbVoluime.TabIndex = 18;
+            this.trbVoluime.TickFrequency = 6;
+            this.trbVoluime.Value = -24;
+            this.trbVoluime.Scroll += new System.EventHandler(this.trbVoluime_Scroll);
+            // 
+            // trackbar1
+            // 
+            this.trackbar1.BackColor = System.Drawing.Color.Transparent;
+            this.trackbar1.Location = new System.Drawing.Point(12, 53);
+            this.trackbar1.Name = "trackbar1";
+            this.trackbar1.Size = new System.Drawing.Size(512, 31);
+            this.trackbar1.TabIndex = 0;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -322,6 +336,7 @@ namespace ADPCM {
             this.Controls.Add(this.numChannels);
             this.Controls.Add(this.btnPlay);
             this.Controls.Add(this.trackbar1);
+            this.Controls.Add(this.trbVoluime);
             this.Cursor = System.Windows.Forms.Cursors.SizeAll;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "Form1";
@@ -333,6 +348,7 @@ namespace ADPCM {
             ((System.ComponentModel.ISupportInitialize)(this.numSampleRate)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numPlayChannel)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numBit)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trbVoluime)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -359,6 +375,7 @@ namespace ADPCM {
         private System.Windows.Forms.NumericUpDown numBit;
         private System.Windows.Forms.RadioButton rbVAG;
         private System.Windows.Forms.RadioButton rbADPCM;
+        private System.Windows.Forms.TrackBar trbVoluime;
     }
 }
 

@@ -157,6 +157,17 @@ namespace ADPCM {
             reload();
         }
 
+        private void trbVoluime_Scroll(object sender = null, EventArgs e = null) {
+            if (null == mWave) {
+                return;
+            }
+            if (trbVoluime.Minimum == trbVoluime.Value) {
+                mWave.Volume = 0.0;
+            } else {
+                mWave.Volume = Math.Pow(10, trbVoluime.Value / 20.0);
+            }
+        }
+
         private void listBox1_MouseDown(object sender, MouseEventArgs e) {
             if (MouseButtons.Right == e.Button) {
                 var itemIndex = listBox1.IndexFromPoint(e.X, e.Y);
@@ -217,6 +228,7 @@ namespace ADPCM {
             btnPlay.Text = "一時停止";
             btnEncode.Enabled = false;
             mWave.Start();
+            trbVoluime_Scroll();
         }
 
         void stop() {

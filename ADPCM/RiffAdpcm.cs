@@ -5,6 +5,8 @@ class RiffAdpcm : RiffFile {
     long mPosFmt;
     long mPosData;
 
+    public const int JOINT_STEREO = 0;
+
     public int SampleRate { get; private set; }
     public int Channels { get; private set; }
     public int Packes { get; private set; }
@@ -112,6 +114,24 @@ class RiffAdpcm : RiffFile {
                 mFs.Read(inputR, 0, adpcmR.PackBytes);
                 adpcmL.Decode(outputL, inputL);
                 adpcmR.Decode(outputR, inputR);
+                for (int i = 0; i < outputL.Length; i++) {
+                    var l = outputL[i] + (outputR[i] << JOINT_STEREO);
+                    var r = outputL[i] - (outputR[i] << JOINT_STEREO);
+                    if (l < -32768) {
+                        l = -32768;
+                    }
+                    if (32767 < l) {
+                        l = 32767;
+                    }
+                    if (r < -32768) {
+                        r = -32768;
+                    }
+                    if (32767 < r) {
+                        r = 32767;
+                    }
+                    outputL[i] = (short)l;
+                    outputR[i] = (short)r;
+                }
                 wav.WriteInt(outputL, outputR);
             }
             break;
@@ -121,7 +141,7 @@ class RiffAdpcm : RiffFile {
         mFs.Position = mPosData;
     }
 
-    public static bool EncodeFile(string inputPath, string outputPath, ADPCM2.TYPE type, int packes = 1) {
+    public static bool EncodeFile(string inputPath, string outputPath, ADPCM2.TYPE type, int packes = 16) {
         var wav = new RiffWave(inputPath);
         if (!wav.IsLoadComplete) {
             wav.Close();
@@ -155,6 +175,12 @@ class RiffAdpcm : RiffFile {
             wav.AllocateBuffer(adpcmL.Samples);
             for (int i = 0; i < wav.Samples; i += adpcmL.Samples) {
                 wav.SetBufferInt(inputL, inputR);
+                for (int j = 0; j < inputL.Length; j++) {
+                    var m = (short)((inputL[j] + inputR[j]) >> 1);
+                    var s = (short)((inputL[j] - inputR[j]) >> (JOINT_STEREO+1));
+                    inputL[j] = m;
+                    inputR[j] = s;
+                }
                 adpcmL.Encode(inputL, outputL);
                 adpcmR.Encode(inputR, outputR);
                 fs.Write(outputL, 0, adpcmL.PackBytes);
